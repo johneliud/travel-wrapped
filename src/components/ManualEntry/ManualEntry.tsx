@@ -55,5 +55,35 @@ export const ManualEntry: React.FC<ManualEntryProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (validateForm()) {
+      onAddTrip(formData);
+      // Reset form
+      setFormData({
+        city: '',
+        country: '',
+        startDate: '',
+        endDate: '',
+        notes: ''
+      });
+      setShowEndDate(false);
+      setErrors({});
+    }
+  };
+
+  const handleInputChange = (field: keyof ManualTrip, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  const getTodayDate = () => {
+    return format(new Date(), 'yyyy-MM-dd');
+  };
+
   
 };
