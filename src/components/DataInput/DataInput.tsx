@@ -134,5 +134,21 @@ export const DataInput: React.FC<DataInputProps> = ({ onDataProcessed }) => {
     setManualTrips(prev => prev.filter((_, i) => i !== index));
   };
 
+  const convertManualTripsToProcessed = (trips: ManualTrip[]): ProcessedTrip[] => {
+    return trips.map((trip, index) => ({
+      id: `manual-${index}`,
+      startTime: new Date(trip.startDate),
+      endTime: trip.endDate ? new Date(trip.endDate) : new Date(trip.startDate),
+      startLocation: trip.coordinates || { latitude: 0, longitude: 0 },
+      endLocation: trip.coordinates || { latitude: 0, longitude: 0 },
+      placeName: trip.city,
+      address: trip.country ? `${trip.city}, ${trip.country}` : trip.city,
+      city: trip.city,
+      country: trip.country,
+      activityType: 'MANUAL_ENTRY',
+      confidence: 1.0
+    }));
+  };
+
   
 };
