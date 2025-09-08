@@ -79,5 +79,35 @@ export class AppErrorHandler {
     };
   }
 
+  static fromError(error: Error | unknown, fallbackCode: ErrorCode = ErrorCode.UNKNOWN_ERROR): AppError {
+    if (error instanceof Error) {
+      // Try to determine the error type from the message
+      const message = error.message.toLowerCase();
+      
+      if (message.includes('quota') || message.includes('storage')) {
+        return this.createError(ErrorCode.STORAGE_QUOTA_EXCEEDED, error.message);
+      }
+      
+      if (message.includes('json') || message.includes('parse')) {
+        return this.createError(ErrorCode.INVALID_JSON, error.message);
+      }
+      
+      if (message.includes('network') || message.includes('fetch')) {
+        return this.createError(ErrorCode.NETWORK_ERROR, error.message);
+      }
+      
+      if (message.includes('timeline') || message.includes('segment')) {
+        return this.createError(ErrorCode.INVALID_TIMELINE_FORMAT, error.message);
+      }
+      
+      return this.createError(fallbackCode, error.message);
+    }
+    
+    return this.createError(
+      fallbackCode, 
+      typeof error === 'string' ? error : 'Unknown error occurred'
+    );
+  }
+
   
 }
