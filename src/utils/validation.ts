@@ -187,3 +187,15 @@ export const isValidLatLng = (coords: LatLng): boolean => {
   );
 };
 
+export const sanitizeString = (str: string, maxLength: number = 1000): string => {
+  if (!str || typeof str !== 'string') {
+    return '';
+  }
+  
+  return str
+    .trim()
+    .substring(0, maxLength)
+    .replace(/[<>]/g, '')
+    .replace(/\s+/g, ' ');
+};
+
