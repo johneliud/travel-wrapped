@@ -75,10 +75,10 @@ export const validateTimelineJson = (jsonContent: string): {
 
   try {
     // Parse JSON
-    let data: any;
+    let data: unknown;
     try {
       data = JSON.parse(jsonContent);
-    } catch (parseError) {
+    } catch {
       return { 
         isValid: false, 
         errors: ['Invalid JSON format. Please ensure the file is a valid Timeline export.'] 
@@ -91,28 +91,30 @@ export const validateTimelineJson = (jsonContent: string): {
       return { isValid: false, errors };
     }
 
+    const timelineData = data as Record<string, unknown>;
+
     // Check for semanticSegments array
-    if (!data.semanticSegments) {
+    if (!timelineData.semanticSegments) {
       errors.push('Missing semanticSegments array. This may not be a Google Timeline export.');
       return { isValid: false, errors };
     }
 
-    if (!Array.isArray(data.semanticSegments)) {
+    if (!Array.isArray(timelineData.semanticSegments)) {
       errors.push('semanticSegments must be an array');
       return { isValid: false, errors };
     }
 
     // Check if array is empty
-    if (data.semanticSegments.length === 0) {
+    if (timelineData.semanticSegments.length === 0) {
       errors.push('No timeline data found. The file appears to be empty.');
       return { isValid: false, errors };
     }
 
     // Validate a few segments to ensure proper structure
-    const sampleSize = Math.min(5, data.semanticSegments.length);
+    const sampleSize = Math.min(5, timelineData.semanticSegments.length);
     for (let i = 0; i < sampleSize; i++) {
-      const segment = data.semanticSegments[i];
-      const segmentErrors = validateSemanticSegment(segment, i);
+      const segment = timelineData.semanticSegments[i];
+      const segmentErrors = validateSemanticSegment(segment);
       if (segmentErrors.length > 0) {
         errors.push(...segmentErrors.map(err => `Segment ${i}: ${err}`));
       }
@@ -137,7 +139,7 @@ export const validateTimelineJson = (jsonContent: string): {
   }
 };
 
-const validateSemanticSegment = (segment: any, _index: number): string[] => {
+const validateSemanticSegment = (segment: unknown): string[] => {
   const errors: string[] = [];
 
   if (!segment || typeof segment !== 'object') {
@@ -145,27 +147,29 @@ const validateSemanticSegment = (segment: any, _index: number): string[] => {
     return errors;
   }
 
+  const seg = segment as Record<string, unknown>;
+
   // Check required time fields
-  if (!segment.startTime) {
+  if (!seg.startTime) {
     errors.push('missing startTime');
-  } else if (typeof segment.startTime !== 'string') {
+  } else if (typeof seg.startTime !== 'string') {
     errors.push('startTime must be a string');
-  } else if (isNaN(Date.parse(segment.startTime))) {
+  } else if (isNaN(Date.parse(seg.startTime))) {
     errors.push('startTime is not a valid date');
   }
 
-  if (!segment.endTime) {
+  if (!seg.endTime) {
     errors.push('missing endTime');
-  } else if (typeof segment.endTime !== 'string') {
+  } else if (typeof seg.endTime !== 'string') {
     errors.push('endTime must be a string');
-  } else if (isNaN(Date.parse(segment.endTime))) {
+  } else if (isNaN(Date.parse(seg.endTime))) {
     errors.push('endTime is not a valid date');
   }
 
   // Check that it has either activity or visit data
-  const hasActivity = segment.activity && typeof segment.activity === 'object';
-  const hasVisit = segment.visit && typeof segment.visit === 'object';
-  const hasTimelinePath = segment.timelinePath && Array.isArray(segment.timelinePath);
+  const hasActivity = seg.activity && typeof seg.activity === 'object';
+  const hasVisit = seg.visit && typeof seg.visit === 'object';
+  const hasTimelinePath = seg.timelinePath && Array.isArray(seg.timelinePath);
 
   if (!hasActivity && !hasVisit && !hasTimelinePath) {
     errors.push('must have activity, visit, or timelinePath data');
