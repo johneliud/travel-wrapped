@@ -1,9 +1,9 @@
 export interface AppError {
   code: string;
   message: string;
-  details?: any;
+  details?: unknown;
   timestamp: Date;
-  userMessage: string; // User-friendly message to display
+  userMessage: string;
 }
 
 export const ErrorCode = {
@@ -68,7 +68,7 @@ export class AppErrorHandler {
   static createError(
     code: ErrorCode, 
     originalMessage: string, 
-    details?: any
+    details?: unknown
   ): AppError {
     return {
       code,
