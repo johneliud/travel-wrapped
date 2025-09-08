@@ -123,5 +123,48 @@ export class AppErrorHandler {
     return this.createError(ErrorCode.FILE_READ_ERROR, error.message, { fileName: file.name });
   }
 
-  
+  static logError(error: AppError): void {
+    console.error('[Travel Wrapped Error]', {
+      code: error.code,
+      message: error.message,
+      userMessage: error.userMessage,
+      timestamp: error.timestamp,
+      details: error.details
+    });
+  }
+
+  static getRecoveryActions(code: ErrorCode): string[] {
+    const recoveryActions: Partial<Record<ErrorCode, string[]>> = {
+      [ErrorCode.FILE_TOO_LARGE]: [
+        'Try exporting a shorter time range from Google Takeout',
+        'Compress the JSON file using a zip utility'
+      ],
+      [ErrorCode.INVALID_FILE_TYPE]: [
+        'Make sure you\'re selecting the Timeline.json file from Google Takeout',
+        'Check that the file hasn\'t been renamed or modified'
+      ],
+      [ErrorCode.FILE_READ_ERROR]: [
+        'Try selecting the file again',
+        'Make sure the file isn\'t open in another application'
+      ],
+      [ErrorCode.INVALID_TIMELINE_FORMAT]: [
+        'Re-export your data from Google Takeout',
+        'Make sure you selected "Maps (your places)" in the export'
+      ],
+      [ErrorCode.NO_TIMELINE_DATA]: [
+        'Check that Location History was enabled during the time period',
+        'Try a different time range in your Google Takeout export'
+      ],
+      [ErrorCode.STORAGE_QUOTA_EXCEEDED]: [
+        'Clear browser cache and data',
+        'Free up space on your device'
+      ],
+      [ErrorCode.NETWORK_ERROR]: [
+        'Check your internet connection',
+        'Try refreshing the page'
+      ]
+    };
+
+    return recoveryActions[code] || ['Try refreshing the page and starting over'];
+  }
 }
