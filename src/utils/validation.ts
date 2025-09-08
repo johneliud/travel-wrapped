@@ -174,3 +174,16 @@ const validateSemanticSegment = (segment: any, _index: number): string[] => {
   return errors;
 };
 
+export const isValidLatLng = (coords: LatLng): boolean => {
+  return (
+    typeof coords.latitude === 'number' &&
+    typeof coords.longitude === 'number' &&
+    coords.latitude >= -90 &&
+    coords.latitude <= 90 &&
+    coords.longitude >= -180 &&
+    coords.longitude <= 180 &&
+    !isNaN(coords.latitude) &&
+    !isNaN(coords.longitude)
+  );
+};
+
