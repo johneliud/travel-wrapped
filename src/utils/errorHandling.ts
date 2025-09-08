@@ -65,5 +65,19 @@ export class AppErrorHandler {
     return errorMessages[code] || errorMessages[ErrorCode.UNKNOWN_ERROR];
   }
 
+  static createError(
+    code: ErrorCode, 
+    originalMessage: string, 
+    details?: any
+  ): AppError {
+    return {
+      code,
+      message: originalMessage,
+      details,
+      timestamp: new Date(),
+      userMessage: this.getUserFriendlyMessage(code, originalMessage)
+    };
+  }
+
   
 }
