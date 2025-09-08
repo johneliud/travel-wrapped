@@ -112,5 +112,64 @@ export class TimelineParser {
     }
   }
 
+  private static calculateStats(trips: ProcessedTrip[]): TravelStats {
+    if (trips.length === 0) {
+      return {
+        totalDistanceKm: 0,
+        uniqueCities: 0,
+        uniqueCountries: 0,
+        longestTripKm: 0,
+        mostVisitedLocation: 'No trips found',
+        totalTrips: 0,
+        firstTripDate: new Date(),
+        lastTripDate: new Date()
+      };
+    }
+
+    // Calculate total distance (only from movement activities)
+    const totalDistance = trips
+      .filter(trip => trip.distanceMeters && trip.activityType !== 'STAY')
+      .reduce((sum, trip) => sum + (trip.distanceMeters || 0), 0);
+
+    // Find longest single trip
+    const longestTrip = trips
+      .filter(trip => trip.distanceMeters && trip.activityType !== 'STAY')
+      .reduce((max, trip) => 
+        (trip.distanceMeters || 0) > (max.distanceMeters || 0) ? trip : max
+      , trips[0]);
+
+    // Count unique places (approximate by grouping nearby locations)
+    const places = trips
+      .filter(trip => trip.placeName)
+      .map(trip => trip.placeName!)
+      .filter((name, index, arr) => arr.indexOf(name) === index);
+
+    // Find most visited location
+    const locationCounts = trips
+      .filter(trip => trip.placeName)
+      .reduce((counts, trip) => {
+        const name = trip.placeName!;
+        counts[name] = (counts[name] || 0) + 1;
+        return counts;
+      }, {} as Record<string, number>);
+
+    const mostVisitedLocation = Object.entries(locationCounts)
+      .sort(([, a], [, b]) => b - a)[0]?.[0] || 'Unknown';
+
+    // Get date range
+    const dates = trips.map(trip => trip.startTime).sort((a, b) => a.getTime() - b.getTime());
+
+    return {
+      totalDistanceKm: Math.round(totalDistance / 1000 * 100) / 100,
+      uniqueCities: places.length,
+      uniqueCountries: 1, // Geocoding to determine actual countries
+      longestTripKm: Math.round((longestTrip?.distanceMeters || 0) / 1000 * 100) / 100,
+      mostVisitedLocation,
+      totalTrips: trips.length,
+      firstTripDate: dates[0],
+      lastTripDate: dates[dates.length - 1]
+    };
+  }
+
   
 }
