@@ -199,3 +199,34 @@ export const sanitizeString = (str: string, maxLength: number = 1000): string =>
     .replace(/\s+/g, ' ');
 };
 
+export const validateFileSize = (file: File, maxSizeMB: number = 50): string[] => {
+  const errors: string[] = [];
+  const maxSizeBytes = maxSizeMB * 1024 * 1024;
+
+  if (file.size > maxSizeBytes) {
+    errors.push(`File size (${(file.size / 1024 / 1024).toFixed(1)}MB) exceeds maximum allowed size (${maxSizeMB}MB)`);
+  }
+
+  if (file.size < 100) {
+    errors.push('File appears to be empty or corrupted');
+  }
+
+  return errors;
+};
+
+export const validateFileType = (file: File, allowedTypes: string[] = ['.json']): string[] => {
+  const errors: string[] = [];
+  const fileName = file.name.toLowerCase();
+  const hasValidExtension = allowedTypes.some(type => fileName.endsWith(type.toLowerCase()));
+
+  if (!hasValidExtension) {
+    errors.push(`Invalid file type. Allowed types: ${allowedTypes.join(', ')}`);
+  }
+
+  // Additional MIME type check for JSON
+  if (allowedTypes.includes('.json') && file.type && !file.type.includes('json')) {
+    errors.push('File does not appear to be a JSON file');
+  }
+
+  return errors;
+};
