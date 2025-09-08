@@ -246,5 +246,25 @@ export class TimelineParser {
     });
   }
 
-  
+  static validateTimelineFile(file: File): string[] {
+    const errors: string[] = [];
+
+    // Check file type
+    if (!file.name.toLowerCase().endsWith('.json')) {
+      errors.push('File must be a JSON file');
+    }
+
+    // Check file size (max 50MB)
+    const maxSize = 50 * 1024 * 1024;
+    if (file.size > maxSize) {
+      errors.push('File size exceeds 50MB limit');
+    }
+
+    // Check minimum file size
+    if (file.size < 100) {
+      errors.push('File appears to be empty or too small');
+    }
+
+    return errors;
+  }
 }
