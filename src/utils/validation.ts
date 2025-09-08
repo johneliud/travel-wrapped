@@ -65,3 +65,75 @@ export const validateManualTrip = (trip: ManualTrip): string[] => {
 
   return errors;
 };
+
+export const validateTimelineJson = (jsonContent: string): { 
+  isValid: boolean; 
+  errors: string[]; 
+  data?: GoogleTimelineData 
+} => {
+  const errors: string[] = [];
+
+  try {
+    // Parse JSON
+    let data: any;
+    try {
+      data = JSON.parse(jsonContent);
+    } catch (parseError) {
+      return { 
+        isValid: false, 
+        errors: ['Invalid JSON format. Please ensure the file is a valid Timeline export.'] 
+      };
+    }
+
+    // Check basic structure
+    if (!data || typeof data !== 'object') {
+      errors.push('Timeline data must be an object');
+      return { isValid: false, errors };
+    }
+
+    // Check for semanticSegments array
+    if (!data.semanticSegments) {
+      errors.push('Missing semanticSegments array. This may not be a Google Timeline export.');
+      return { isValid: false, errors };
+    }
+
+    if (!Array.isArray(data.semanticSegments)) {
+      errors.push('semanticSegments must be an array');
+      return { isValid: false, errors };
+    }
+
+    // Check if array is empty
+    if (data.semanticSegments.length === 0) {
+      errors.push('No timeline data found. The file appears to be empty.');
+      return { isValid: false, errors };
+    }
+
+    // Validate a few segments to ensure proper structure
+    const sampleSize = Math.min(5, data.semanticSegments.length);
+    for (let i = 0; i < sampleSize; i++) {
+      const segment = data.semanticSegments[i];
+      const segmentErrors = validateSemanticSegment(segment, i);
+      if (segmentErrors.length > 0) {
+        errors.push(...segmentErrors.map(err => `Segment ${i}: ${err}`));
+      }
+    }
+
+    if (errors.length > sampleSize) {
+      errors.unshift('File structure does not match Google Timeline format');
+      return { isValid: false, errors };
+    }
+
+    return { 
+      isValid: errors.length === 0, 
+      errors, 
+      data: data as GoogleTimelineData 
+    };
+
+  } catch (error) {
+    return { 
+      isValid: false, 
+      errors: [`Unexpected validation error: ${error instanceof Error ? error.message : 'Unknown error'}`] 
+    };
+  }
+};
+
