@@ -57,5 +57,65 @@ export const DataInput: React.FC<DataInputProps> = ({ onDataProcessed }) => {
     }
   ];
 
+  const handleFileSelect = async (file: File) => {
+    setCurrentError(null);
+    setUploadState({ status: 'uploading', progress: 0, fileName: file.name, fileSize: file.size });
+
+    try {
+      // Validate file
+      const fileSizeErrors = validateFileSize(file, 50);
+      const fileTypeErrors = validateFileType(file, ['.json']);
+      
+      if (fileSizeErrors.length > 0 || fileTypeErrors.length > 0) {
+        const allErrors = [...fileSizeErrors, ...fileTypeErrors];
+        throw new Error(allErrors[0]);
+      }
+
+      // Update progress to show upload complete
+      setUploadState(prev => ({ ...prev, progress: 10 }));
+
+      // Read and validate file content
+      const fileContent = await readFileAsText(file);
+      const validation = validateTimelineJson(fileContent);
+      
+      if (!validation.isValid) {
+        throw new Error(validation.errors[0] || 'Invalid timeline format');
+      }
+
+      setUploadState(prev => ({ ...prev, status: 'processing', progress: 25 }));
+
+      // Parse timeline data
+      const result = await TimelineParser.parseTimelineFile(file, (progress) => {
+        setUploadState(prev => ({ 
+          ...prev, 
+          progress: 25 + Math.floor(progress * 0.75) // 25% to 100%
+        }));
+      });
+
+      // Include manual trips if any
+      if (manualTrips.length > 0) {
+        const convertedManualTrips = convertManualTripsToProcessed(manualTrips);
+        result.trips = [...result.trips, ...convertedManualTrips];
+        
+        // Recalculate stats with manual trips included
+        result.totalSegments += manualTrips.length;
+        result.processedSegments += manualTrips.length;
+      }
+
+      setUploadState(prev => ({ ...prev, status: 'success', progress: 100 }));
+      onDataProcessed(result);
+
+    } catch (error) {
+      console.error('File processing error:', error);
+      const appError = AppErrorHandler.fromError(error);
+      setCurrentError(appError.userMessage);
+      setUploadState(prev => ({ 
+        ...prev, 
+        status: 'error', 
+        error: appError.userMessage 
+      }));
+    }
+  };
+
   
 };
