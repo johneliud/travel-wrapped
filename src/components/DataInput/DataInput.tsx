@@ -117,5 +117,22 @@ export const DataInput: React.FC<DataInputProps> = ({ onDataProcessed }) => {
     }
   };
 
+  const handleManualTripAdd = (trip: ManualTrip) => {
+    const errors = validateManualTrip(trip);
+    if (errors.length > 0) {
+      setCurrentError(errors[0]);
+      return;
+    }
+
+    setManualTrips(prev => [...prev, trip]);
+    setCurrentError(null);
+    
+    setShowManualEntry(false);
+  };
+
+  const removeManualTrip = (index: number) => {
+    setManualTrips(prev => prev.filter((_, i) => i !== index));
+  };
+
   
 };
