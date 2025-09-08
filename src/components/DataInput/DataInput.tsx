@@ -150,5 +150,147 @@ export const DataInput: React.FC<DataInputProps> = ({ onDataProcessed }) => {
     }));
   };
 
-  
+  const readFileAsText = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          resolve(event.target.result as string);
+        } else {
+          reject(new Error('Failed to read file'));
+        }
+      };
+      reader.onerror = () => reject(new Error('File reading error'));
+      reader.readAsText(file);
+    });
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto p-6 space-y-8">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Travel Wrapped</h1>
+        <p className="text-gray-600 mb-8">
+          Create your personalized travel recap from Google Timeline data
+        </p>
+      </div>
+
+      {/* Error Display */}
+      {currentError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2">
+            <div className="text-red-500">⚠️</div>
+            <p className="text-red-700">{currentError}</p>
+          </div>
+          <button
+            onClick={() => setCurrentError(null)}
+            className="text-red-600 hover:text-red-800 text-sm underline mt-2"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {/* Processing Steps */}
+      {uploadState.status !== 'idle' && (
+        <div className="bg-gray-50 rounded-lg p-6">
+          <StepProgress steps={getProcessingSteps()} />
+          
+          {(uploadState.status === 'processing' || uploadState.status === 'uploading') && (
+            <div className="mt-4">
+              <ProgressIndicator
+                progress={uploadState.progress}
+                message={
+                  uploadState.status === 'uploading' ? 'Uploading file...' :
+                  uploadState.progress < 25 ? 'Validating timeline data...' :
+                  uploadState.progress < 75 ? 'Processing travel segments...' :
+                  'Calculating travel statistics...'
+                }
+                size="medium"
+                color="blue"
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Main Upload Area */}
+      {uploadState.status !== 'success' && (
+        <div className="grid md:grid-cols-2 gap-8">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              Upload Timeline Data
+            </h2>
+            <FileUpload
+              onFileSelect={handleFileSelect}
+              uploadState={uploadState}
+              maxFileSizeMB={50}
+            />
+            
+            <div className="mt-4 text-sm text-gray-600">
+              <p className="font-medium mb-2">How to get your Timeline data:</p>
+              <ol className="list-decimal list-inside space-y-1">
+                <li>Go to <a href="https://takeout.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Google Takeout</a></li>
+                <li>Select "Timeline"</li>
+                <li>Download and extract the Timeline.json file</li>
+                <li>Upload it here</li>
+              </ol>
+            </div>
+          </div>
+
+          <div>
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              Manual Trip Entry
+            </h2>
+            
+            {!showManualEntry ? (
+              <div className="bg-gray-50 rounded-lg p-6 text-center">
+                <p className="text-gray-600 mb-4">
+                  Add trips manually if you don't have Timeline data
+                </p>
+                <button
+                  onClick={() => setShowManualEntry(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Add Manual Trip
+                </button>
+              </div>
+            ) : (
+              <ManualEntry
+                onAddTrip={handleManualTripAdd}
+                onClose={() => setShowManualEntry(false)}
+              />
+            )}
+
+            {/* Manual Trips List */}
+            {manualTrips.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-lg font-medium text-gray-800 mb-3">
+                  Manual Trips ({manualTrips.length})
+                </h3>
+                <div className="space-y-2">
+                  {manualTrips.map((trip, index) => (
+                    <div key={index} className="flex justify-between items-center bg-white rounded-lg border p-3">
+                      <div>
+                        <p className="font-medium">{trip.city}{trip.country && `, ${trip.country}`}</p>
+                        <p className="text-sm text-gray-600">
+                          {trip.startDate}
+                          {trip.endDate && ` - ${trip.endDate}`}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => removeManualTrip(index)}
+                        className="text-red-500 hover:text-red-700 text-sm"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
