@@ -109,5 +109,19 @@ export class AppErrorHandler {
     );
   }
 
+  static handleFileError(file: File, error: Error): AppError {
+    const message = error.message.toLowerCase();
+    
+    if (message.includes('size') || file.size > 50 * 1024 * 1024) {
+      return this.createError(ErrorCode.FILE_TOO_LARGE, error.message, { fileSize: file.size });
+    }
+    
+    if (message.includes('type') || !file.name.toLowerCase().endsWith('.json')) {
+      return this.createError(ErrorCode.INVALID_FILE_TYPE, error.message, { fileName: file.name });
+    }
+    
+    return this.createError(ErrorCode.FILE_READ_ERROR, error.message, { fileName: file.name });
+  }
+
   
 }
