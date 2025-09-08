@@ -171,5 +171,80 @@ export class TimelineParser {
     };
   }
 
+  static async parseTimelineFile(
+    file: File, 
+    onProgress?: (progress: number) => void
+  ): Promise<ProcessingResult> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      
+      reader.onload = async (event) => {
+        try {
+          if (!event.target?.result) {
+            throw new Error('Failed to read file');
+          }
+
+          const content = event.target.result as string;
+          const data: GoogleTimelineData = JSON.parse(content);
+          
+          if (!data.semanticSegments || !Array.isArray(data.semanticSegments)) {
+            throw new Error('Invalid timeline format: missing semanticSegments array');
+          }
+
+          const segments = data.semanticSegments;
+          const trips: ProcessedTrip[] = [];
+          const errors: string[] = [];
+          
+          const totalSegments = segments.length;
+          let processedSegments = 0;
+
+          // Process segments in batches to avoid blocking UI
+          const batchSize = 100;
+          for (let i = 0; i < segments.length; i += batchSize) {
+            const batch = segments.slice(i, i + batchSize);
+            
+            for (let j = 0; j < batch.length; j++) {
+              const segmentIndex = i + j;
+              try {
+                const trip = this.processSegment(batch[j], segmentIndex);
+                if (trip) {
+                  trips.push(trip);
+                }
+              } catch (error) {
+                errors.push(`Segment ${segmentIndex}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+              }
+              
+              processedSegments++;
+              const progress = Math.floor((processedSegments / totalSegments) * 100);
+              onProgress?.(progress);
+            }
+            
+            // Allow UI to update between batches
+            await new Promise(resolve => setTimeout(resolve, 0));
+          }
+
+          const stats = this.calculateStats(trips);
+
+          resolve({
+            trips,
+            stats,
+            totalSegments,
+            processedSegments,
+            errors
+          });
+
+        } catch (error) {
+          reject(error instanceof Error ? error : new Error('Unknown parsing error'));
+        }
+      };
+
+      reader.onerror = () => {
+        reject(new Error('Failed to read file'));
+      };
+
+      reader.readAsText(file);
+    });
+  }
+
   
 }
