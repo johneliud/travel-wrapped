@@ -137,3 +137,40 @@ export const validateTimelineJson = (jsonContent: string): {
   }
 };
 
+const validateSemanticSegment = (segment: any, _index: number): string[] => {
+  const errors: string[] = [];
+
+  if (!segment || typeof segment !== 'object') {
+    errors.push('must be an object');
+    return errors;
+  }
+
+  // Check required time fields
+  if (!segment.startTime) {
+    errors.push('missing startTime');
+  } else if (typeof segment.startTime !== 'string') {
+    errors.push('startTime must be a string');
+  } else if (isNaN(Date.parse(segment.startTime))) {
+    errors.push('startTime is not a valid date');
+  }
+
+  if (!segment.endTime) {
+    errors.push('missing endTime');
+  } else if (typeof segment.endTime !== 'string') {
+    errors.push('endTime must be a string');
+  } else if (isNaN(Date.parse(segment.endTime))) {
+    errors.push('endTime is not a valid date');
+  }
+
+  // Check that it has either activity or visit data
+  const hasActivity = segment.activity && typeof segment.activity === 'object';
+  const hasVisit = segment.visit && typeof segment.visit === 'object';
+  const hasTimelinePath = segment.timelinePath && Array.isArray(segment.timelinePath);
+
+  if (!hasActivity && !hasVisit && !hasTimelinePath) {
+    errors.push('must have activity, visit, or timelinePath data');
+  }
+
+  return errors;
+};
+
