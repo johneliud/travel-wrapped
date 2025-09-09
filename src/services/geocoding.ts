@@ -150,5 +150,36 @@ export class GeocodingService {
     }
   }
 
+  private static parseGeocodingResult(result: GeocodingResult): LocationInfo {
+    const address = result.address;
+    if (!address) {
+      return {
+        city: result.display_name.split(',')[0]?.trim(),
+        confidence: 0.3
+      };
+    }
+
+    // Extract city from various possible fields
+    const city = address.city || address.town || address.village;
+    const country = address.country;
+    const countryCode = address.country_code;
+    
+    // Confidence based on importance and address completeness
+    let confidence = 0.5;
+    if (result.importance && result.importance > 0.5) {
+      confidence = 0.8;
+    }
+    if (city && country) {
+      confidence = Math.max(confidence, 0.7);
+    }
+
+    return {
+      city,
+      country,
+      countryCode: countryCode?.toUpperCase(),
+      confidence
+    };
+  }
+
   
 }
