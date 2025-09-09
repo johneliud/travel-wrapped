@@ -378,5 +378,31 @@ export class TravelCalculations {
     };
   }
 
+  /**
+   * Deduplicate nearby places based on proximity
+   */
+  private static deduplicateNearbyPlaces(trips: EnhancedTrip[]): EnhancedTrip[] {
+    const deduplicated: EnhancedTrip[] = [];
+    const stayTrips = trips.filter(trip => trip.type === 'STAY');
+    const journeyTrips = trips.filter(trip => trip.type === 'JOURNEY');
+
+    deduplicated.push(...journeyTrips);
+
+    for (const trip of stayTrips) {
+      const nearbyTrip = deduplicated.find(existingTrip => 
+        existingTrip.type === 'STAY' &&
+        this.calculateDistance(trip.location, existingTrip.location) < this.PROXIMITY_THRESHOLD_KM
+      );
+
+      if (nearbyTrip) {
+        this.mergeNearbyTrips(nearbyTrip, trip);
+      } else {
+        deduplicated.push(trip);
+      }
+    }
+
+    return deduplicated.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+  }
+
   
 }
