@@ -1,10 +1,12 @@
 import { parseISO } from 'date-fns';
+import { TravelCalculations } from './calculations';
 import type { 
   GoogleTimelineData, 
   SemanticSegment, 
   ProcessedTrip, 
   LatLng, 
   ProcessingResult,
+  EnhancedProcessingResult,
   TravelStats 
 } from '../types/travel';
 
@@ -244,6 +246,54 @@ export class TimelineParser {
 
       reader.readAsText(file);
     });
+  }
+
+  /**
+   * Enhanced timeline parsing with API enrichment
+   */
+  static async parseTimelineFileEnhanced(
+    file: File,
+    onProgress?: (progress: number, stage: string) => void
+  ): Promise<EnhancedProcessingResult> {
+    try {
+        onProgress?.(0, 'Reading file...');
+      
+      // First, parse with basic processing
+      const basicResult = await this.parseTimelineFile(file, (progress) => {
+        onProgress?.(progress * 0.4, 'Processing timeline data...');
+      });
+
+      onProgress?.(40, 'Enhancing trips with API data...');
+
+      // Then enhance with API data
+      const enhancedTrips = await TravelCalculations.enhanceTripsWithAPIs(
+        basicResult.trips,
+        (apiProgress) => {
+          onProgress?.(40 + (apiProgress * 0.5), 'Enriching with location and weather data...');
+        }
+      );
+
+      onProgress?.(90, 'Calculating enhanced statistics...');
+
+      // Calculate enhanced statistics
+      const enhancedStats = TravelCalculations.calculateEnhancedStats(enhancedTrips);
+
+      onProgress?.(100, 'Complete!');
+
+      return {
+        enhancedTrips,
+        enhancedStats,
+        basicTrips: basicResult.trips,
+        basicStats: basicResult.stats,
+        totalSegments: basicResult.totalSegments,
+        processedSegments: basicResult.processedSegments,
+        apiEnrichmentProgress: 100,
+        errors: basicResult.errors
+      };
+
+    } catch (error) {
+      throw error instanceof Error ? error : new Error('Enhanced parsing failed');
+    }
   }
 
   static validateTimelineFile(file: File): string[] {
