@@ -77,5 +77,41 @@ export class TravelCalculations {
     return this.EARTH_RADIUS_KM * c;
   }
 
+  /**
+   * Enhanced trip grouping with API enrichment
+   */
+  static async enhanceTripsWithAPIs(
+    segments: ProcessedTrip[],
+    onProgress?: (progress: number) => void
+  ): Promise<EnhancedTrip[]> {
+    if (segments.length === 0) return [];
+
+    // Initialize country service
+    await CountriesService.initialize();
+
+    // Group segments into trips
+    const groupedTrips = this.groupTripsFromSegments(segments);
+    
+    // Enhance with API data in batches
+    const enhancedTrips: EnhancedTrip[] = [];
+    const batchSize = this.MAX_CONCURRENT_API_CALLS;
+    
+    for (let i = 0; i < groupedTrips.length; i += batchSize) {
+      const batch = groupedTrips.slice(i, i + batchSize);
+      
+      const enhancedBatch = await Promise.all(
+        batch.map(trip => this.enrichTripWithAPIs(trip))
+      );
+      
+      enhancedTrips.push(...enhancedBatch);
+      
+      // Report progress
+      const progress = Math.floor((i + batch.length) / groupedTrips.length * 100);
+      onProgress?.(progress);
+    }
+
+    return this.deduplicateNearbyPlaces(enhancedTrips);
+  }
+
   
 }
