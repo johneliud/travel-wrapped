@@ -167,5 +167,37 @@ export class WeatherService {
     }));
   }
 
+  private static parseCurrentWeatherResponse(data: unknown): WeatherData {
+    const weatherData = data as { 
+      current?: { 
+        temperature_2m?: number;
+        relative_humidity_2m?: number;
+        precipitation?: number;
+        weather_code?: number;
+        wind_speed_10m?: number;
+      };
+      daily?: {
+        temperature_2m_max?: number[];
+        temperature_2m_min?: number[];
+      };
+    };
+    
+    const current = weatherData.current || {};
+    const daily = weatherData.daily || {};
+    const today = new Date().toISOString().split('T')[0];
+
+    return {
+      date: today,
+      temperature: current.temperature_2m || 0,
+      temperatureMax: daily.temperature_2m_max?.[0] || current.temperature_2m || 0,
+      temperatureMin: daily.temperature_2m_min?.[0] || current.temperature_2m || 0,
+      humidity: current.relative_humidity_2m,
+      precipitation: current.precipitation || 0,
+      weatherCode: current.weather_code || 0,
+      weatherDescription: this.getWeatherDescription(current.weather_code || 0),
+      windSpeed: current.wind_speed_10m || 0
+    };
+  }
+
   
 }
