@@ -182,5 +182,26 @@ export class TravelCalculations {
     };
   }
 
+  private static createJourneyTrip(segments: ProcessedTrip[]): EnhancedTrip | null {
+    if (segments.length === 0) return null;
+
+    const segment = segments[0];
+    const distanceKm = segment.distanceMeters ? segment.distanceMeters / 1000 : 0;
+    const durationMinutes = differenceInMinutes(segment.endTime, segment.startTime);
+
+    return {
+      id: `journey-${segment.id}`,
+      type: 'JOURNEY',
+      startTime: segment.startTime,
+      endTime: segment.endTime,
+      location: segment.startLocation,
+      endLocation: segment.endLocation,
+      distanceKm,
+      durationMinutes,
+      confidence: segment.confidence,
+      segments
+    };
+  }
+
   
 }
