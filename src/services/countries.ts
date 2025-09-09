@@ -131,5 +131,40 @@ export class CountriesService {
     }
   }
 
+  /**
+   * Get all countries (cached)
+   */
+  private static async getAllCountries(): Promise<Country[]> {
+    const cacheKey = 'all-countries';
+    const cached = this.cache.get(cacheKey);
+
+    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION_MS) {
+      return cached.data;
+    }
+
+    try {
+      const url = `${this.BASE_URL}/all?fields=name,cca2,cca3,region,subregion,capital,flag,flags,timezones,currencies,languages`;
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`Countries API error: ${response.status}`);
+      }
+
+      const countries: Country[] = await response.json();
+      
+      // Cache the results
+      this.cache.set(cacheKey, {
+        data: countries,
+        timestamp: Date.now()
+      });
+
+      return countries;
+
+    } catch (error) {
+      console.error('Failed to fetch all countries:', error);
+      throw error;
+    }
+  }
+
   
 }
