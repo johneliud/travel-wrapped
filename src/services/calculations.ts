@@ -203,5 +203,46 @@ export class TravelCalculations {
     };
   }
 
+  /**
+   * Enrich a trip with API data
+   */
+  private static async enrichTripWithAPIs(trip: EnhancedTrip): Promise<EnhancedTrip> {
+    try {
+      const enrichedTrip = { ...trip };
+
+      // Get location information if not already available
+      if (!trip.city || !trip.country) {
+        const locationInfo = await GeocodingService.reverseGeocode(trip.location);
+        enrichedTrip.city = enrichedTrip.city || locationInfo.city;
+        enrichedTrip.country = enrichedTrip.country || locationInfo.country;
+        enrichedTrip.countryCode = locationInfo.countryCode;
+      }
+
+      // Get weather data for the trip date
+      if (trip.type === 'STAY') {
+        try {
+          const tripDate = format(trip.startTime, 'yyyy-MM-dd');
+          const weather = await WeatherService.getWeatherForDate(trip.location, tripDate);
+          
+          if (weather) {
+            enrichedTrip.weather = {
+              temperature: weather.temperature,
+              description: weather.weatherDescription,
+              icon: WeatherService.getWeatherIcon(weather.weatherCode)
+            };
+          }
+        } catch (error) {
+          console.warn('Failed to get weather data for trip:', error);
+        }
+      }
+
+      return enrichedTrip;
+
+    } catch (error) {
+      console.warn('Failed to enrich trip with API data:', error);
+      return trip;
+    }
+  }
+
   
 }
