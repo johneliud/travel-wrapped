@@ -404,5 +404,26 @@ export class TravelCalculations {
     return deduplicated.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
   }
 
-  
+  private static mergeNearbyTrips(existingTrip: EnhancedTrip, newTrip: EnhancedTrip): void {
+    if (newTrip.startTime < existingTrip.startTime) {
+      existingTrip.startTime = newTrip.startTime;
+    }
+    if (newTrip.endTime > existingTrip.endTime) {
+      existingTrip.endTime = newTrip.endTime;
+    }
+
+    existingTrip.durationMinutes = differenceInMinutes(existingTrip.endTime, existingTrip.startTime);
+
+    if (newTrip.confidence > existingTrip.confidence) {
+      existingTrip.placeName = newTrip.placeName || existingTrip.placeName;
+      existingTrip.address = newTrip.address || existingTrip.address;
+      existingTrip.city = newTrip.city || existingTrip.city;
+      existingTrip.country = newTrip.country || existingTrip.country;
+      existingTrip.countryCode = newTrip.countryCode || existingTrip.countryCode;
+      existingTrip.confidence = newTrip.confidence;
+      existingTrip.weather = newTrip.weather || existingTrip.weather;
+    }
+
+    existingTrip.segments.push(...newTrip.segments);
+  }
 }
