@@ -181,5 +181,30 @@ export class GeocodingService {
     };
   }
 
-  
+  private static async enforceRateLimit(): Promise<void> {
+    const timeSinceLastRequest = Date.now() - this.lastRequestTime;
+    if (timeSinceLastRequest < this.RATE_LIMIT_MS) {
+      await new Promise(resolve => 
+        setTimeout(resolve, this.RATE_LIMIT_MS - timeSinceLastRequest)
+      );
+    }
+    this.lastRequestTime = Date.now();
+  }
+
+  /**
+   * Clear the geocoding cache
+   */
+  static clearCache(): void {
+    this.cache.clear();
+  }
+
+  /**
+   * Get cache statistics
+   */
+  static getCacheStats(): { size: number; hitRate: number } {
+    return {
+      size: this.cache.size,
+      hitRate: 0 // Could implement hit rate tracking
+    };
+  }
 }
