@@ -31,3 +31,28 @@ export interface EnhancedTrip {
   segments: ProcessedTrip[]; // Original segments that make up this trip
 }
 
+export interface EnhancedTravelStats extends TravelStats {
+  hottestTrip?: {
+    location: string;
+    temperature: number;
+    date: string;
+  };
+  coldestTrip?: {
+    location: string;
+    temperature: number;
+    date: string;
+  };
+  countries: Array<{
+    name: string;
+    code: string;
+    flag: string;
+    visitCount: number;
+  }>;
+  topDestinations: Array<{
+    city: string;
+    country: string;
+    visits: number;
+    totalDays: number;
+  }>;
+}
+
