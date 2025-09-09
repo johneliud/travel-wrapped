@@ -133,5 +133,39 @@ export class WeatherService {
     }
   }
 
+  private static parseWeatherResponse(data: unknown): WeatherData[] {
+    const weatherData = data as { daily?: { 
+      time?: string[];
+      temperature_2m_max?: number[];
+      temperature_2m_min?: number[];
+      temperature_2m_mean?: number[];
+      precipitation_sum?: number[];
+      weather_code?: number[];
+      wind_speed_10m_max?: number[];
+    }};
+    
+    const daily = weatherData.daily;
+    if (!daily) return [];
+    
+    const dates = daily.time || [];
+    const tempMax = daily.temperature_2m_max || [];
+    const tempMin = daily.temperature_2m_min || [];
+    const tempMean = daily.temperature_2m_mean || [];
+    const precipitation = daily.precipitation_sum || [];
+    const weatherCodes = daily.weather_code || [];
+    const windSpeed = daily.wind_speed_10m_max || [];
+
+    return dates.map((date: string, index: number) => ({
+      date,
+      temperature: tempMean[index] || ((tempMax[index] + tempMin[index]) / 2) || 0,
+      temperatureMax: tempMax[index] || 0,
+      temperatureMin: tempMin[index] || 0,
+      precipitation: precipitation[index] || 0,
+      weatherCode: weatherCodes[index] || 0,
+      weatherDescription: this.getWeatherDescription(weatherCodes[index] || 0),
+      windSpeed: windSpeed[index] || 0
+    }));
+  }
+
   
 }
