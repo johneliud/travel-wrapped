@@ -187,5 +187,34 @@ export class CountriesService {
     return null;
   }
 
-  
+  private static formatCountryInfo(country: Country): CountryInfo {
+    return {
+      name: country.name.common,
+      code: country.cca2,
+      flag: country.flag,
+      region: country.region,
+      capital: country.capital?.[0],
+      timezone: country.timezones?.[0]
+    };
+  }
+
+  /**
+   * Clear the countries cache
+   */
+  static clearCache(): void {
+    this.cache.clear();
+    this.countriesByCode.clear();
+    this.countriesByName.clear();
+    this.isInitialized = false;
+  }
+
+  /**
+   * Get cache statistics
+   */
+  static getCacheStats(): { size: number; initialized: boolean } {
+    return {
+      size: this.cache.size,
+      initialized: this.isInitialized
+    };
+  }
 }
