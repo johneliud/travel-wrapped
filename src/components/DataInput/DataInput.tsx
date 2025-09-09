@@ -7,6 +7,7 @@ import type {
   UploadState, 
   ManualTrip, 
   ProcessingResult,
+  EnhancedProcessingResult,
   ProcessedTrip 
 } from '../../types/travel';
 import { 
@@ -18,7 +19,7 @@ import {
 import { AppErrorHandler } from '../../utils/errorHandling';
 
 interface DataInputProps {
-  onDataProcessed: (result: ProcessingResult) => void;
+  onDataProcessed: (result: ProcessingResult | EnhancedProcessingResult) => void;
 }
 
 export const DataInput: React.FC<DataInputProps> = ({ onDataProcessed }) => {
@@ -30,6 +31,8 @@ export const DataInput: React.FC<DataInputProps> = ({ onDataProcessed }) => {
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [manualTrips, setManualTrips] = useState<ManualTrip[]>([]);
   const [currentError, setCurrentError] = useState<string | null>(null);
+  const [enhancedProcessing, setEnhancedProcessing] = useState(true);
+  const [processingStage, setProcessingStage] = useState<string>('');
 
   const getProcessingSteps = (): Array<{label: string; status: 'pending' | 'active' | 'completed' | 'error'}> => [
     { 
@@ -84,20 +87,37 @@ export const DataInput: React.FC<DataInputProps> = ({ onDataProcessed }) => {
 
       setUploadState(prev => ({ ...prev, status: 'processing', progress: 25 }));
 
-      // Parse timeline data
-      const result = await TimelineParser.parseTimelineFile(file, (progress) => {
-        setUploadState(prev => ({ 
-          ...prev, 
-          progress: 25 + Math.floor(progress * 0.75) // 25% to 100%
-        }));
-      });
+      // Parse timeline data - use enhanced processing if enabled
+      let result: ProcessingResult | EnhancedProcessingResult;
+      
+      if (enhancedProcessing) {
+        result = await TimelineParser.parseTimelineFileEnhanced(file, (progress, stage) => {
+          setProcessingStage(stage);
+          setUploadState(prev => ({ 
+            ...prev, 
+            progress: 25 + Math.floor(progress * 0.75) // 25% to 100%
+          }));
+        });
+      } else {
+        result = await TimelineParser.parseTimelineFile(file, (progress) => {
+          setUploadState(prev => ({ 
+            ...prev, 
+            progress: 25 + Math.floor(progress * 0.75) // 25% to 100%
+          }));
+        });
+      }
 
       // Include manual trips if any
       if (manualTrips.length > 0) {
         const convertedManualTrips = convertManualTripsToProcessed(manualTrips);
-        result.trips = [...result.trips, ...convertedManualTrips];
         
-        // Recalculate stats with manual trips included
+        if ('enhancedTrips' in result) {
+          result.basicTrips = [...result.basicTrips, ...convertedManualTrips];
+        } else {
+          result.trips = [...result.trips, ...convertedManualTrips];
+        }
+        
+        // Update totals
         result.totalSegments += manualTrips.length;
         result.processedSegments += manualTrips.length;
       }
@@ -202,6 +222,7 @@ export const DataInput: React.FC<DataInputProps> = ({ onDataProcessed }) => {
                 message={
                   uploadState.status === 'uploading' ? 'Uploading file...' :
                   uploadState.progress < 25 ? 'Validating timeline data...' :
+                  processingStage ? processingStage :
                   uploadState.progress < 75 ? 'Processing travel segments...' :
                   'Calculating travel statistics...'
                 }
@@ -225,6 +246,27 @@ export const DataInput: React.FC<DataInputProps> = ({ onDataProcessed }) => {
               uploadState={uploadState}
               maxFileSizeMB={50}
             />
+            
+            {/* Enhanced Processing Toggle */}
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="enhanced-processing"
+                  checked={enhancedProcessing}
+                  onChange={(e) => setEnhancedProcessing(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                  disabled={uploadState.status === 'processing' || uploadState.status === 'uploading'}
+                />
+                <label htmlFor="enhanced-processing" className="flex-1">
+                  <span className="font-medium text-blue-800">Enhanced Processing</span>
+                  <p className="text-sm text-blue-600 mt-1">
+                    Get enriched travel insights with location names, weather data, and country information using free APIs. 
+                    Takes a bit longer but provides much richer results.
+                  </p>
+                </label>
+              </div>
+            </div>
             
             <div className="mt-4 text-sm text-gray-600">
               <p className="font-medium mb-2">How to get your Timeline data:</p>
