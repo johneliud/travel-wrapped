@@ -216,6 +216,23 @@ export class TravelCalculations {
         enrichedTrip.city = enrichedTrip.city || locationInfo.city;
         enrichedTrip.country = enrichedTrip.country || locationInfo.country;
         enrichedTrip.countryCode = locationInfo.countryCode;
+        
+        // If we still don't have country info, try the improved coordinate-based lookup
+        if (!enrichedTrip.country && CountriesService.getCountryByCoordinates) {
+          try {
+            const countryInfo = await CountriesService.getCountryByCoordinates(
+              trip.location.latitude, 
+              trip.location.longitude
+            );
+            if (countryInfo) {
+              enrichedTrip.country = countryInfo.name;
+              enrichedTrip.countryCode = countryInfo.code;
+            }
+          } catch (error) {
+            // Silently fail - geocoding already provided fallback
+            console.debug('Country lookup by coordinates failed:', error);
+          }
+        }
       }
 
       // Get weather data for the trip date
