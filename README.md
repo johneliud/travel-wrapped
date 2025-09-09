@@ -59,7 +59,7 @@
 ### Getting Your Timeline Data
 
 1. Go to [Google Takeout](https://takeout.google.com)
-2. Select "Maps (your places)" 
+2. Select "Timeline" 
 3. Choose JSON format and download
 4. Extract the `Timeline.json` file from the downloaded archive
 5. Upload it to Travel Wrapped
@@ -71,23 +71,32 @@
 - **Data Processing**: date-fns, Papaparse, Dexie.js
 - **Build Tool**: Vite with Hot Module Replacement
 
+### 🌐 **API Integrations** (All Free, No Keys Required)
+- **[Nominatim](https://nominatim.org/)** - Geocoding and reverse geocoding (OpenStreetMap)
+- **[Open-Meteo](https://open-meteo.com/)** - Historical weather data
+- **[REST Countries](https://restcountries.com/)** - Country information and flags
+
 ## Project Structure
 
 ```
 src/
 ├── components/
-│   ├── DataInput/          # Main data input orchestration
+│   ├── DataInput/          # Main data input orchestration with enhanced processing toggle
 │   ├── FileUpload/         # Timeline JSON file upload
 │   ├── ManualEntry/        # Manual trip entry form
 │   └── ProgressIndicator/  # Progress tracking components
 ├── services/
-│   └── parser.ts          # Google Timeline JSON parser
+│   ├── parser.ts          # Google Timeline JSON parser with enhanced processing
+│   ├── calculations.ts    # Advanced trip grouping and statistics engine
+│   ├── geocoding.ts       # Nominatim API integration for location data
+│   ├── countries.ts       # REST Countries API for country information
+│   └── weather.ts         # Open-Meteo API for historical weather data
 ├── types/
-│   └── travel.ts          # TypeScript interfaces
+│   └── travel.ts          # TypeScript interfaces (basic + enhanced)
 ├── utils/
 │   ├── validation.ts      # Data validation utilities
 │   └── errorHandling.ts   # Error handling and user messages
-└── App.tsx               # Main application component
+└── App.tsx               # Main application with results and visualization views
 ```
 
 ## Development Commands
@@ -109,30 +118,65 @@ npm run lint
 ## Current Status
 
 ### Phase 1.2: Data Input System (Complete)
+### Phase 1.3: Core Statistics Engine (Complete)
+
+**Latest Features Added:**
+- **Processing Mode Toggle** - Choose between basic or enhanced processing
+- **Real Geocoding** - Actual city and country names via OpenStreetMap
+- **Country Flags** - Proper flag emojis generated from country codes
+- **Weather Integration** - Historical weather data for your travel dates
+- **Enhanced Statistics** - Top destinations, visit counts, travel insights
+- **Improved UI** - Beautiful gradients, better layouts, visualization placeholder
+
+### Completed Phases
 - [x] File upload component for Timeline.json
 - [x] JSON parser for Google Timeline format  
 - [x] Manual trip entry form (city, date, optional notes)
 - [x] Data validation and error handling
 - [x] Progress indicators for file processing
 
-### Coming Next: Phase 1.3 - Core Statistics Engine
-- [ ] Extract trips from Timeline data
-- [ ] Calculate total distance traveled
-- [ ] Count unique cities and countries visited
-- [ ] Find longest single trip
-- [ ] Identify most visited location
-- [ ] Basic data structure for processed trips
+### Phase 1.3: Core Statistics Engine (Complete)
+- [x] Extract trips from Timeline data with smart grouping (stays vs journeys)
+- [x] Calculate total distance traveled using Haversine formula
+- [x] Count unique cities and countries visited via real geocoding APIs
+- [x] Find longest single trip with enhanced accuracy
+- [x] Identify most visited location with proximity-based deduplication
+- [x] Enhanced data structures for processed trips with API enrichment
+
+#### Enhanced API Integration Features
+- [x] **Nominatim Geocoding** - Real location names and addresses (OpenStreetMap)
+- [x] **REST Countries API** - Country flags, capitals, and metadata
+- [x] **Open-Meteo Weather** - Historical weather data for travel dates
+- [x] **Rate limiting & Caching** - Respectful API usage with local storage
+- [x] **Graceful fallbacks** - Works offline or when APIs are unavailable
+
+### Coming Next: Phase 1.4 - Local Storage System
+- [ ] Setup Dexie.js for IndexedDB
+- [ ] Save/load processed trip data
+- [ ] Data persistence between sessions
+- [ ] Clear data functionality
+- [ ] Storage quota monitoring
 
 ## Data Processing
 
-The app processes Google Timeline data to extract:
+The app offers two processing modes:
 
+### **Basic Processing**
 - **Visits**: Places you stayed (with location, duration, confidence)
-- **Activities**: Movement between places (walking, driving, etc.)
+- **Activities**: Movement between places (walking, driving, etc.)  
 - **Timeline Paths**: GPS coordinate sequences
 - **Statistics**: Distance, unique locations, travel patterns
 
-All processing happens locally in your browser for maximum privacy.
+### **Enhanced Processing** (NEW)
+Everything from basic processing, plus:
+- **Real location names** via Nominatim/OpenStreetMap geocoding
+- **Country detection** with proper flag emojis and metadata
+- **Weather insights** - hottest/coldest destinations during your trips
+- **Smart trip grouping** - combines related segments into meaningful journeys
+- **Proximity deduplication** - merges nearby visits to the same location
+- **Rich statistics** - top destinations, visit counts, enhanced insights
+
+**Privacy Note**: All processing happens locally in your browser. API calls are only made to enhance your data with publicly available information (location names, weather, country data). Your personal travel data never leaves your device.
 
 ## Contributing
 
@@ -144,7 +188,7 @@ This project follows privacy-first principles:
 
 ## License
 
-[MIT License](https://github.com/john-eliud/travel_wrapped/blob/main/LICENSE)
+[MIT License](https://github.com/johneliud/travel_wrapped/blob/main/LICENSE)
 
 ---
 

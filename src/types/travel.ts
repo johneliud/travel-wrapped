@@ -102,10 +102,71 @@ export interface UploadState {
   fileSize?: number;
 }
 
+// Enhanced trip data with API enrichment
+export interface EnhancedTrip {
+  id: string;
+  type: 'STAY' | 'JOURNEY';
+  startTime: Date;
+  endTime: Date;
+  location: LatLng;
+  endLocation?: LatLng;
+  placeName?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  countryCode?: string;
+  distanceKm?: number;
+  durationMinutes: number;
+  confidence: number;
+  weather?: {
+    temperature: number;
+    description: string;
+    icon: string;
+  };
+  segments: ProcessedTrip[]; // Original segments that make up this trip
+}
+
+// Enhanced travel statistics with API data
+export interface EnhancedTravelStats extends TravelStats {
+  hottestTrip?: {
+    location: string;
+    temperature: number;
+    date: string;
+  };
+  coldestTrip?: {
+    location: string;
+    temperature: number;
+    date: string;
+  };
+  countries: Array<{
+    name: string;
+    code: string;
+    flag: string;
+    visitCount: number;
+  }>;
+  topDestinations: Array<{
+    city: string;
+    country: string;
+    visits: number;
+    totalDays: number;
+  }>;
+}
+
 export interface ProcessingResult {
   trips: ProcessedTrip[];
   stats: TravelStats;
   totalSegments: number;
   processedSegments: number;
+  errors: string[];
+}
+
+export interface EnhancedProcessingResult {
+  enhancedTrips: EnhancedTrip[];
+  enhancedStats: EnhancedTravelStats;
+  basicTrips: ProcessedTrip[];
+  basicStats: TravelStats;
+  totalSegments: number;
+  processedSegments: number;
+  apiEnrichmentProgress: number;
   errors: string[];
 }

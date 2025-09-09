@@ -30,6 +30,10 @@ export const ErrorCode = {
   // Network/API errors
   NETWORK_ERROR: 'NETWORK_ERROR',
   API_ERROR: 'API_ERROR',
+  GEOCODING_ERROR: 'GEOCODING_ERROR',
+  WEATHER_API_ERROR: 'WEATHER_API_ERROR',
+  COUNTRIES_API_ERROR: 'COUNTRIES_API_ERROR',
+  API_RATE_LIMITED: 'API_RATE_LIMITED',
   
   // Unknown errors
   UNKNOWN_ERROR: 'UNKNOWN_ERROR'
@@ -58,6 +62,10 @@ export class AppErrorHandler {
       
       [ErrorCode.NETWORK_ERROR]: 'Network connection failed. Please check your internet connection.',
       [ErrorCode.API_ERROR]: 'Service temporarily unavailable. Please try again later.',
+      [ErrorCode.GEOCODING_ERROR]: 'Unable to determine location information. Proceeding with basic data.',
+      [ErrorCode.WEATHER_API_ERROR]: 'Weather data temporarily unavailable. Your travel data will be processed without weather information.',
+      [ErrorCode.COUNTRIES_API_ERROR]: 'Country information service unavailable. Proceeding with basic country detection.',
+      [ErrorCode.API_RATE_LIMITED]: 'API rate limit reached. Some enhanced features may be temporarily unavailable.',
       
       [ErrorCode.UNKNOWN_ERROR]: 'An unexpected error occurred. Please try again.'
     };
