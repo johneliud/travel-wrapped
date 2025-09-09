@@ -156,5 +156,31 @@ export class TravelCalculations {
     return trips;
   }
 
+  private static createStayTrip(segments: ProcessedTrip[]): EnhancedTrip | null {
+    if (segments.length === 0) return null;
+
+    const sortedSegments = segments.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+    const firstSegment = sortedSegments[0];
+    const lastSegment = sortedSegments[sortedSegments.length - 1];
+    const bestSegment = segments.reduce((best, current) => 
+      current.confidence > best.confidence ? current : best
+    );
+
+    const durationMinutes = differenceInMinutes(lastSegment.endTime, firstSegment.startTime);
+
+    return {
+      id: `stay-${firstSegment.id}`,
+      type: 'STAY',
+      startTime: firstSegment.startTime,
+      endTime: lastSegment.endTime,
+      location: firstSegment.startLocation,
+      placeName: bestSegment.placeName,
+      address: bestSegment.address,
+      durationMinutes,
+      confidence: bestSegment.confidence,
+      segments: sortedSegments
+    };
+  }
+
   
 }
