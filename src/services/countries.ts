@@ -8,8 +8,7 @@ export interface Country {
   region: string;
   subregion?: string;
   capital?: string[];
-  flag: string;
-  flags: {
+  flags?: {
     svg: string;
     png: string;
   };
@@ -33,10 +32,12 @@ export interface CountryInfo {
 export class CountriesService {
   private static readonly BASE_URL = 'https://restcountries.com/v3.1';
   private static readonly CACHE_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+  private static readonly RATE_LIMIT_MS = 1000; // 1 second between requests
   private static cache = new Map<string, { data: Country[]; timestamp: number }>();
   private static countriesByCode = new Map<string, Country>();
   private static countriesByName = new Map<string, Country>();
   private static isInitialized = false;
+  private static lastRequestTime = 0;
 
   /**
    * Initialize the countries service by loading all countries
@@ -143,7 +144,7 @@ export class CountriesService {
     }
 
     try {
-      const url = `${this.BASE_URL}/all?fields=name,cca2,cca3,region,subregion,capital,flag,flags,timezones,currencies,languages`;
+      const url = `${this.BASE_URL}/all?fields=name,cca2,cca3,region,subregion,capital,flags,timezones,currencies,languages`;
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -167,35 +168,78 @@ export class CountriesService {
   }
 
   /**
-   * Get country by coordinates (using most likely country based on location)
+   * Get country by coordinates using Nominatim reverse geocoding
    */
   static async getCountryByCoordinates(lat: number, lon: number): Promise<CountryInfo | null> {
-    // This is a simplified approach - in a real app you might use a reverse geocoding service
-    // For now, we'll use some basic geographic rules for common regions
-    
-    // Africa
-    if (lat >= -35 && lat <= 37 && lon >= -20 && lon <= 52) {
-      if (lat >= -5 && lat <= 5 && lon >= 29 && lon <= 42) {
-        // East Africa region - Kenya, Uganda, Tanzania area
-        if (lon >= 34 && lon <= 41) return await this.getCountryInfo('kenya');
-        if (lon >= 29 && lon <= 35) return await this.getCountryInfo('uganda');
-        if (lat <= -1 && lon >= 29 && lon <= 40) return await this.getCountryInfo('tanzania');
-      }
-    }
+    try {
+      // Implement rate limiting
+      await this.enforceRateLimit();
+      
+      // Use Nominatim for reverse geocoding to get country
+      const url = `https://nominatim.openstreetmap.org/reverse?` + new URLSearchParams({
+        format: 'json',
+        lat: lat.toString(),
+        lon: lon.toString(),
+        zoom: '3', // Country level
+        addressdetails: '1'
+      });
 
-    // This is a fallback - in production you'd use proper reverse geocoding
-    return null;
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Travel-Wrapped/1.0 (Educational Project)'
+        }
+      });
+
+      if (!response.ok) {
+        console.warn(`Nominatim reverse geocoding failed: ${response.status}`);
+        return null;
+      }
+
+      const data = await response.json();
+      
+      if (data.address && data.address.country) {
+        // Get detailed country info from our REST Countries cache
+        return await this.getCountryInfo(data.address.country);
+      }
+
+      return null;
+    } catch (error) {
+      console.warn('Reverse geocoding for country failed:', error);
+      return null;
+    }
   }
 
   private static formatCountryInfo(country: Country): CountryInfo {
+    // Generate flag emoji from country code using regional indicator symbols
+    const getFlagEmoji = (countryCode: string): string => {
+      if (!countryCode || countryCode.length !== 2) return '🌍';
+      
+      const codePoints = countryCode
+        .toUpperCase()
+        .split('')
+        .map(char => 0x1F1E6 - 65 + char.charCodeAt(0));
+      
+      return String.fromCodePoint(...codePoints);
+    };
+
     return {
       name: country.name.common,
       code: country.cca2,
-      flag: country.flag,
+      flag: getFlagEmoji(country.cca2),
       region: country.region,
       capital: country.capital?.[0],
       timezone: country.timezones?.[0]
     };
+  }
+
+  private static async enforceRateLimit(): Promise<void> {
+    const timeSinceLastRequest = Date.now() - this.lastRequestTime;
+    if (timeSinceLastRequest < this.RATE_LIMIT_MS) {
+      await new Promise(resolve => 
+        setTimeout(resolve, this.RATE_LIMIT_MS - timeSinceLastRequest)
+      );
+    }
+    this.lastRequestTime = Date.now();
   }
 
   /**
