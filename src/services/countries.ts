@@ -64,5 +64,72 @@ export class CountriesService {
     }
   }
 
+  /**
+   * Get country information by country code or name
+   */
+  static async getCountryInfo(identifier: string): Promise<CountryInfo | null> {
+    await this.initialize();
+
+    const normalizedId = identifier.toLowerCase().trim();
+    
+    // Try by code first
+    let country = this.countriesByCode.get(normalizedId);
+    
+    // Try by name if not found
+    if (!country) {
+      country = this.countriesByName.get(normalizedId);
+    }
+
+    // Try partial name matching
+    if (!country) {
+      const entries = Array.from(this.countriesByName.entries());
+      const match = entries.find(([name]) => 
+        name.includes(normalizedId) || normalizedId.includes(name)
+      );
+      country = match?.[1];
+    }
+
+    if (!country) {
+      return null;
+    }
+
+    return this.formatCountryInfo(country);
+  }
+
+  /**
+   * Search countries by region
+   */
+  static async getCountriesByRegion(region: string): Promise<CountryInfo[]> {
+    try {
+      const cacheKey = `region:${region.toLowerCase()}`;
+      const cached = this.cache.get(cacheKey);
+      
+      if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION_MS) {
+        return cached.data.map(c => this.formatCountryInfo(c));
+      }
+
+      const url = `${this.BASE_URL}/region/${encodeURIComponent(region)}`;
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`Countries API error: ${response.status}`);
+      }
+
+      const countries: Country[] = await response.json();
+      
+      // Cache the results
+      this.cache.set(cacheKey, {
+        data: countries,
+        timestamp: Date.now()
+      });
+
+      return countries.map(c => this.formatCountryInfo(c));
+
+    } catch (error) {
+      console.warn(`Failed to fetch countries in region ${region}:`, error);
+      return [];
+    }
+  }
+
   
 }
