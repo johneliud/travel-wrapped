@@ -166,5 +166,26 @@ export class CountriesService {
     }
   }
 
+  /**
+   * Get country by coordinates (using most likely country based on location)
+   */
+  static async getCountryByCoordinates(lat: number, lon: number): Promise<CountryInfo | null> {
+    // This is a simplified approach - in a real app you might use a reverse geocoding service
+    // For now, we'll use some basic geographic rules for common regions
+    
+    // Africa
+    if (lat >= -35 && lat <= 37 && lon >= -20 && lon <= 52) {
+      if (lat >= -5 && lat <= 5 && lon >= 29 && lon <= 42) {
+        // East Africa region - Kenya, Uganda, Tanzania area
+        if (lon >= 34 && lon <= 41) return await this.getCountryInfo('kenya');
+        if (lon >= 29 && lon <= 35) return await this.getCountryInfo('uganda');
+        if (lat <= -1 && lon >= 29 && lon <= 40) return await this.getCountryInfo('tanzania');
+      }
+    }
+
+    // This is a fallback - in production you'd use proper reverse geocoding
+    return null;
+  }
+
   
 }
