@@ -85,5 +85,70 @@ export class GeocodingService {
     }
   }
 
+  /**
+   * Forward geocode an address to get coordinates and location info
+   */
+  static async forwardGeocode(address: string): Promise<LocationInfo & { coords?: LatLng }> {
+    const cacheKey = `addr:${address.toLowerCase().trim()}`;
+    
+    // Check cache first
+    const cached = this.cache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION_MS) {
+      return cached.data as LocationInfo & { coords?: LatLng };
+    }
+
+    try {
+      await this.enforceRateLimit();
+
+      const url = `${this.BASE_URL}/search?` + new URLSearchParams({
+        format: 'json',
+        q: address,
+        addressdetails: '1',
+        limit: '1'
+      });
+
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Travel-Wrapped/1.0 (Educational Project)'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Geocoding API error: ${response.status}`);
+      }
+
+      const results: GeocodingResult[] = await response.json();
+      
+      if (results.length === 0) {
+        throw new Error('No results found');
+      }
+
+      const result = results[0];
+      const locationInfo = {
+        ...this.parseGeocodingResult(result),
+        coords: {
+          latitude: result.lat,
+          longitude: result.lon
+        }
+      };
+
+      // Cache the result
+      this.cache.set(cacheKey, {
+        data: locationInfo,
+        timestamp: Date.now()
+      });
+
+      return locationInfo;
+
+    } catch (error) {
+      console.warn('Forward geocoding failed:', error);
+      
+      return {
+        city: address,
+        confidence: 0.1
+      };
+    }
+  }
+
   
 }
