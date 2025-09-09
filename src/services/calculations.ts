@@ -113,5 +113,48 @@ export class TravelCalculations {
     return this.deduplicateNearbyPlaces(enhancedTrips);
   }
 
+  /**
+   * Group related segments into meaningful trips
+   */
+  private static groupTripsFromSegments(segments: ProcessedTrip[]): EnhancedTrip[] {
+    if (segments.length === 0) return [];
+
+    const sortedSegments = [...segments].sort((a, b) => 
+      a.startTime.getTime() - b.startTime.getTime()
+    );
+
+    const trips: EnhancedTrip[] = [];
+    let currentStaySegments: ProcessedTrip[] = [];
+
+    for (const segment of sortedSegments) {
+      const isStay = segment.activityType === 'STAY';
+      const duration = differenceInMinutes(segment.endTime, segment.startTime);
+
+      if (isStay && duration >= this.MIN_STAY_DURATION_MINUTES) {
+        currentStaySegments.push(segment);
+      } else if (isStay && currentStaySegments.length > 0) {
+        currentStaySegments.push(segment);
+      } else {
+        if (currentStaySegments.length > 0) {
+          const stayTrip = this.createStayTrip(currentStaySegments);
+          if (stayTrip) trips.push(stayTrip);
+          currentStaySegments = [];
+        }
+
+        if (!isStay && segment.distanceMeters && segment.distanceMeters > 1000) {
+          const journeyTrip = this.createJourneyTrip([segment]);
+          if (journeyTrip) trips.push(journeyTrip);
+        }
+      }
+    }
+
+    if (currentStaySegments.length > 0) {
+      const stayTrip = this.createStayTrip(currentStaySegments);
+      if (stayTrip) trips.push(stayTrip);
+    }
+
+    return trips;
+  }
+
   
 }
