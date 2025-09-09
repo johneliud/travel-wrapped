@@ -81,5 +81,57 @@ export class WeatherService {
     }
   }
 
+  /**
+   * Get weather for a single date
+   */
+  static async getWeatherForDate(coords: LatLng, date: string): Promise<WeatherData | null> {
+    const weatherData = await this.getHistoricalWeather({
+      coords,
+      startDate: date,
+      endDate: date
+    });
+
+    return weatherData[0] || null;
+  }
+
+  /**
+   * Get current weather (for recent dates)
+   */
+  static async getCurrentWeather(coords: LatLng): Promise<WeatherData | null> {
+    try {
+      const url = `${this.CURRENT_URL}?` + new URLSearchParams({
+        latitude: coords.latitude.toString(),
+        longitude: coords.longitude.toString(),
+        current: [
+          'temperature_2m',
+          'relative_humidity_2m',
+          'precipitation',
+          'weather_code',
+          'wind_speed_10m'
+        ].join(','),
+        daily: [
+          'temperature_2m_max',
+          'temperature_2m_min'
+        ].join(','),
+        forecast_days: '1',
+        timezone: 'auto'
+      });
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`Weather API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      return this.parseCurrentWeatherResponse(data);
+
+    } catch (error) {
+      console.warn('Failed to fetch current weather:', error);
+      return null;
+    }
+  }
+
   
 }
