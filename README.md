@@ -144,7 +144,7 @@ This project follows privacy-first principles:
 
 ## License
 
-[MIT License](https://github.com/john-eliud/travel_wrapped/blob/main/LICENSE)
+[MIT License](https://github.com/johneliud/travel_wrapped/blob/main/LICENSE)
 
 ---
 
