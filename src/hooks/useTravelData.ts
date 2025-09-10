@@ -235,3 +235,46 @@ export const useTravelData = (): UseTravelDataReturn => {
   };
 };
 
+// Helper hook for processing results
+export const useProcessingResult = () => {
+  const { saveTravelData } = useTravelData();
+
+  const saveProcessingResult = useCallback(async (
+    result: ProcessingResult | EnhancedProcessingResult,
+    fileName?: string,
+    fileSize?: number
+  ): Promise<string> => {
+    if ('enhancedTrips' in result) {
+      // Enhanced result
+      return await saveTravelData({
+        basicTrips: result.basicTrips,
+        enhancedTrips: result.enhancedTrips,
+        basicStats: result.basicStats,
+        enhancedStats: result.enhancedStats,
+        manualTrips: [],
+        errors: result.errors,
+        totalSegments: result.totalSegments,
+        processedSegments: result.processedSegments,
+        apiEnrichmentProgress: result.apiEnrichmentProgress,
+        fileName,
+        fileSize
+      });
+    } else {
+      // Basic result
+      return await saveTravelData({
+        basicTrips: result.trips,
+        basicStats: result.stats,
+        manualTrips: [],
+        errors: result.errors,
+        totalSegments: result.totalSegments,
+        processedSegments: result.processedSegments,
+        fileName,
+        fileSize
+      });
+    }
+  }, [saveTravelData]);
+
+  return { saveProcessingResult };
+};
+
+export type { AppTravelData };
