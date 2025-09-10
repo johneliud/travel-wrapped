@@ -60,3 +60,66 @@ export const ACHIEVEMENT_DEFINITIONS: Omit<Achievement, 'unlocked'>[] = [
   { id: 'weather_warrior', title: 'Weather Warrior', description: 'Experienced both extreme hot and cold', icon: '🌡️', category: 'special' },
 ];
 
+// Numbers API service
+export const numbersApiService = {
+  async getFact(number: number, type: 'math' | 'trivia' | 'date' | 'year' = 'trivia'): Promise<NumbersFact | null> {
+    try {
+      const cacheKey = `numbers_${type}_${number}`;
+      
+      // Check cache first (using existing storage service pattern)
+      if (typeof window !== 'undefined' && 'storage' in navigator) {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          const { data, expiry } = JSON.parse(cached);
+          if (Date.now() < expiry) {
+            return data;
+          }
+        }
+      }
+
+      const response = await fetch(`http://numbersapi.com/${number}/${type}?json`);
+      if (!response.ok) {
+        throw new Error('Numbers API request failed');
+      }
+      
+      const fact = await response.json() as NumbersFact;
+      
+      // Cache for 24 hours
+      if (typeof window !== 'undefined') {
+        const cacheData = {
+          data: fact,
+          expiry: Date.now() + 24 * 60 * 60 * 1000
+        };
+        localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+      }
+      
+      return fact;
+    } catch (error) {
+      console.warn('Failed to fetch from Numbers API:', error);
+      return null;
+    }
+  },
+
+  async getMultipleFacts(numbers: Array<{ value: number; type: 'math' | 'trivia' | 'date' | 'year' }>): Promise<DynamicFact[]> {
+    const facts = await Promise.allSettled(
+      numbers.map(async ({ value, type }) => {
+        const fact = await this.getFact(value, type);
+        return fact ? {
+          number: value,
+          fact: fact.text,
+          type,
+          category: 'distance' as const // Default, will be overridden
+        } : null;
+      })
+    );
+
+    const results: DynamicFact[] = [];
+    for (const result of facts) {
+      if (result.status === 'fulfilled' && result.value !== null) {
+        results.push(result.value);
+      }
+    }
+    return results;
+  }
+};
+
