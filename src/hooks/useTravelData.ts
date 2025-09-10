@@ -193,6 +193,45 @@ export const useTravelData = (): UseTravelDataReturn => {
     }
   }, [travelData]);
 
-  
+  const refreshStoredDataList = useCallback(async () => {
+    try {
+      const stored = await storageService.getAllTravelData();
+      setAllStoredData(stored);
+    } catch (err) {
+      console.error('Failed to refresh stored data list:', err);
+    }
+  }, []);
+
+  const clearCurrentData = useCallback(() => {
+    setTravelData(null);
+    setError(null);
+  }, []);
+
+  // Auto-load the most recent data on mount
+  useEffect(() => {
+    const autoLoad = async () => {
+      try {
+        await loadTravelData(); // Load most recent
+        await refreshStoredDataList(); // Get all stored data
+      } catch (err) {
+        console.error('Auto-load failed:', err);
+      }
+    };
+
+    autoLoad();
+  }, [loadTravelData, refreshStoredDataList]);
+
+  return {
+    travelData,
+    isLoading,
+    error,
+    allStoredData,
+    saveTravelData,
+    loadTravelData,
+    updateTravelData,
+    deleteTravelData,
+    refreshStoredDataList,
+    clearCurrentData
+  };
 };
 
