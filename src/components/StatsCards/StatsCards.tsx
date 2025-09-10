@@ -166,6 +166,58 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, isEnhanced = fals
         </div>
       )}
 
+      {/* Achievements Section */}
+      <div className="bg-gradient-to-br from-green-50 to-teal-100 rounded-lg p-6 border border-green-200">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-green-800 flex items-center">
+            <span className="text-2xl mr-2">🏅</span>
+            Achievements ({unlockedAchievements.length}/{achievements.length})
+          </h3>
+          {achievements.length > 6 && (
+            <button
+              onClick={() => setShowAllAchievements(!showAllAchievements)}
+              className="text-green-600 hover:text-green-700 text-sm font-medium"
+            >
+              {showAllAchievements ? 'Show Less' : 'Show All'}
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          {displayAchievements.map((achievement) => (
+            <div
+              key={achievement.id}
+              className={`text-center p-3 rounded-lg border-2 transition-all ${
+                achievement.unlocked
+                  ? 'bg-green-100 border-green-300 transform hover:scale-105'
+                  : 'bg-gray-100 border-gray-200 opacity-60'
+              }`}
+              title={achievement.description}
+            >
+              <div className={`text-2xl mb-1 ${achievement.unlocked ? '' : 'grayscale'}`}>
+                {achievement.icon}
+              </div>
+              <div className={`text-xs font-medium ${achievement.unlocked ? 'text-green-800' : 'text-gray-600'}`}>
+                {achievement.title}
+              </div>
+              {achievement.threshold && !achievement.unlocked && (
+                <div className="text-xs text-gray-500 mt-1">
+                  {achievement.threshold}+ required
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {unlockedAchievements.length > 0 && (
+          <div className="mt-4 text-center">
+            <div className="inline-flex items-center bg-green-200 text-green-800 px-4 py-2 rounded-full text-sm font-medium">
+              🎉 You've unlocked {unlockedAchievements.length} achievements!
+            </div>
+          </div>
+        )}
+      </div>
+
       
     </div>
   );
