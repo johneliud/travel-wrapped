@@ -190,6 +190,23 @@ export const storageService = {
     }
   },
 
+  async clearExpiredCache(): Promise<void> {
+    try {
+      const now = new Date();
+      await db.cache.where('expiresAt').below(now).delete();
+    } catch (error) {
+      console.error('Failed to clear expired cache:', error);
+    }
+  },
+
+  async clearCacheByService(service: 'weather' | 'countries' | 'geocoding'): Promise<void> {
+    try {
+      await db.cache.where('service').equals(service).delete();
+    } catch (error) {
+      console.error('Failed to clear cache by service:', error);
+    }
+  },
+
   
 };
 
