@@ -155,6 +155,41 @@ export const storageService = {
     }
   },
 
+  // Cache management for API responses
+  async saveToCache(key: string, data: unknown, expirationHours: number, service: 'weather' | 'countries' | 'geocoding'): Promise<void> {
+    try {
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + expirationHours * 60 * 60 * 1000);
+      
+      await db.cache.put({
+        key,
+        data,
+        createdAt: now,
+        expiresAt,
+        service
+      });
+    } catch (error) {
+      console.error('Failed to save to cache:', error);
+    }
+  },
+
+  async getFromCache(key: string): Promise<unknown | null> {
+    try {
+      const entry = await db.cache.get(key);
+      if (!entry) return null;
+      
+      if (new Date() > entry.expiresAt) {
+        await db.cache.delete(key);
+        return null;
+      }
+      
+      return entry.data;
+    } catch (error) {
+      console.error('Failed to get from cache:', error);
+      return null;
+    }
+  },
+
   
 };
 
