@@ -268,3 +268,71 @@ export function getTravelLevel(totalDistanceKm: number): { level: number; progre
     title: currentLevel.title
   };
 }
+
+// Function to get travel personality based on stats
+export function getTravelPersonality(stats: TravelStats | EnhancedTravelStats): {
+  type: string;
+  title: string;
+  description: string;
+  icon: string;
+} {
+  const distancePerTrip = stats.totalDistanceKm / stats.totalTrips;
+  const countriesPerTrip = stats.uniqueCountries / stats.totalTrips;
+  
+  // Enhanced stats specific personalities
+  if ('hottestTrip' in stats && 'coldestTrip' in stats) {
+    const hasExtremeWeather = (stats.hottestTrip?.temperature || 0) > 35 || (stats.coldestTrip?.temperature || 0) < 0;
+    if (hasExtremeWeather) {
+      return {
+        type: 'weather_warrior',
+        title: 'Weather Warrior',
+        description: 'You\'ve conquered both scorching heat and freezing cold!',
+        icon: '🌡️'
+      };
+    }
+  }
+  
+  if (stats.uniqueCountries > 15) {
+    return {
+      type: 'globe_trotter',
+      title: 'Globe Trotter',
+      description: 'The world is your oyster! You\'ve explored far and wide.',
+      icon: '🌍'
+    };
+  } else if (distancePerTrip > 2000) {
+    return {
+      type: 'long_distance_traveler',
+      title: 'Long Distance Traveler',
+      description: 'You prefer epic journeys to distant lands.',
+      icon: '✈️'
+    };
+  } else if (countriesPerTrip > 0.5) {
+    return {
+      type: 'border_hopper',
+      title: 'Border Hopper',
+      description: 'You love crossing borders and exploring new cultures.',
+      icon: '🛂'
+    };
+  } else if (stats.totalTrips > 50) {
+    return {
+      type: 'frequent_explorer',
+      title: 'Frequent Explorer',
+      description: 'You\'re always on the move! Travel is in your DNA.',
+      icon: '🧳'
+    };
+  } else if (stats.uniqueCities > 20) {
+    return {
+      type: 'city_collector',
+      title: 'City Collector',
+      description: 'Urban landscapes fascinate you. Every city tells a story.',
+      icon: '🏙️'
+    };
+  } else {
+    return {
+      type: 'weekend_wanderer',
+      title: 'Weekend Wanderer',
+      description: 'You make the most of your adventures, big or small.',
+      icon: '🥾'
+    };
+  }
+}
