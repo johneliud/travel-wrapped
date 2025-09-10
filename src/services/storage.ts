@@ -207,6 +207,41 @@ export const storageService = {
     }
   },
 
+  // Storage quota monitoring
+  async getStorageQuota(): Promise<StorageQuotaInfo> {
+    try {
+      if ('storage' in navigator && 'estimate' in navigator.storage) {
+        const estimate = await navigator.storage.estimate();
+        const used = estimate.usage || 0;
+        const available = estimate.quota || 0;
+        const percentage = available > 0 ? (used / available) * 100 : 0;
+        
+        return {
+          used,
+          available,
+          percentage,
+          lastChecked: new Date()
+        };
+      }
+      
+      // Fallback for browsers that don't support storage estimation
+      return {
+        used: 0,
+        available: 0,
+        percentage: 0,
+        lastChecked: new Date()
+      };
+    } catch (error) {
+      console.error('Failed to get storage quota:', error);
+      return {
+        used: 0,
+        available: 0,
+        percentage: 0,
+        lastChecked: new Date()
+      };
+    }
+  },
+
   
 };
 
