@@ -9,22 +9,20 @@
 - **Local Processing** - All timeline analysis happens in your browser
 - **No Data Collection** - We don't store, track, or transmit your personal data
 
-### Data Input System (MVP Phase 1.2) - Completed
-
-#### Google Timeline Upload
+### Google Timeline Upload
 - **Drag & Drop Interface** - Easy file upload with visual feedback
 - **Progress Tracking** - Real-time progress indicators during processing
 - **Format Validation** - Automatic validation of Google Timeline JSON format
 - **Error Handling** - Comprehensive error reporting with recovery suggestions
 - **Large File Support** - Handles Timeline files up to 50MB
 
-#### Manual Trip Entry
+### Manual Trip Entry
 - **Trip Form** - Add individual trips with city, country, dates, and notes
 - **Multi-day Trips** - Support for trips spanning multiple days
 - **Data Validation** - Form validation with helpful error messages
 - **Trip Management** - Add, edit, and remove manual entries
 
-#### Smart Processing
+### Smart Processing
 - **Timeline Parser** - Extracts visits and activities from Google Timeline data
 - **Distance Calculation** - Calculates travel distances using Haversine formula
 - **Statistics Engine** - Generates comprehensive travel statistics
@@ -69,6 +67,7 @@
 - **Frontend**: React 18 + TypeScript + Vite
 - **Styling**: Tailwind CSS
 - **Data Processing**: date-fns, Papaparse, Dexie.js
+- **Local Storage**: IndexedDB via Dexie.js for data persistence
 - **Build Tool**: Vite with Hot Module Replacement
 
 ### 🌐 **API Integrations** (All Free, No Keys Required)
@@ -88,9 +87,14 @@ src/
 ├── services/
 │   ├── parser.ts          # Google Timeline JSON parser with enhanced processing
 │   ├── calculations.ts    # Advanced trip grouping and statistics engine
+│   ├── storage.ts         # Dexie.js IndexedDB database and caching service
 │   ├── geocoding.ts       # Nominatim API integration for location data
 │   ├── countries.ts       # REST Countries API for country information
 │   └── weather.ts         # Open-Meteo API for historical weather data
+├── hooks/
+│   ├── useTravelData.ts   # Travel data persistence and management
+│   ├── useLocalStorage.ts # Generic local storage utilities
+│   └── useStorageQuota.ts # Storage space monitoring
 ├── types/
 │   └── travel.ts          # TypeScript interfaces (basic + enhanced)
 ├── utils/
@@ -119,43 +123,22 @@ npm run lint
 
 ### Phase 1.2: Data Input System (Complete)
 ### Phase 1.3: Core Statistics Engine (Complete)
+### Phase 1.4: Local Storage System (Complete)
 
 **Latest Features Added:**
-- **Processing Mode Toggle** - Choose between basic or enhanced processing
-- **Real Geocoding** - Actual city and country names via OpenStreetMap
-- **Country Flags** - Proper flag emojis generated from country codes
-- **Weather Integration** - Historical weather data for your travel dates
-- **Enhanced Statistics** - Top destinations, visit counts, travel insights
-- **Improved UI** - Beautiful gradients, better layouts, visualization placeholder
+- **Data Persistence** - Travel data automatically saved between sessions
+- **Storage Management** - IndexedDB-based storage with quota monitoring
+- **Multiple Datasets** - Save and manage multiple travel datasets
+- **Data Export/Import** - Backup and restore functionality
+- **Storage Warnings** - Alerts when storage space is running low
+- **Automatic Recovery** - Resumes from last session on page reload
 
-### Completed Phases
-- [x] File upload component for Timeline.json
-- [x] JSON parser for Google Timeline format  
-- [x] Manual trip entry form (city, date, optional notes)
-- [x] Data validation and error handling
-- [x] Progress indicators for file processing
-
-### Phase 1.3: Core Statistics Engine (Complete)
-- [x] Extract trips from Timeline data with smart grouping (stays vs journeys)
-- [x] Calculate total distance traveled using Haversine formula
-- [x] Count unique cities and countries visited via real geocoding APIs
-- [x] Find longest single trip with enhanced accuracy
-- [x] Identify most visited location with proximity-based deduplication
-- [x] Enhanced data structures for processed trips with API enrichment
-
-#### Enhanced API Integration Features
-- [x] **Nominatim Geocoding** - Real location names and addresses (OpenStreetMap)
-- [x] **REST Countries API** - Country flags, capitals, and metadata
-- [x] **Open-Meteo Weather** - Historical weather data for travel dates
-- [x] **Rate limiting & Caching** - Respectful API usage with local storage
-- [x] **Graceful fallbacks** - Works offline or when APIs are unavailable
-
-### Coming Next: Phase 1.4 - Local Storage System
-- [ ] Setup Dexie.js for IndexedDB
-- [ ] Save/load processed trip data
-- [ ] Data persistence between sessions
-- [ ] Clear data functionality
-- [ ] Storage quota monitoring
+### Coming Next: Phase 1.5 - Basic Visualization
+- [ ] Setup React Leaflet map component
+- [ ] Display trip locations as pins
+- [ ] Simple polylines connecting locations
+- [ ] Map controls (zoom, pan)
+- [ ] Responsive map container
 
 ## Data Processing
 
@@ -178,18 +161,33 @@ Everything from basic processing, plus:
 
 **Privacy Note**: All processing happens locally in your browser. API calls are only made to enhance your data with publicly available information (location names, weather, country data). Your personal travel data never leaves your device.
 
-## Contributing
+## Local Storage System
 
-This project follows privacy-first principles:
-1. No external APIs that require authentication
-2. No user data transmission
-3. Frontend-only architecture
-4. Free services only
+Travel Wrapped includes a robust local storage system that ensures your data is preserved between sessions:
+
+### **Data Persistence**
+- **Automatic Saving** - All processed travel data is automatically saved to IndexedDB
+- **Session Recovery** - Resume exactly where you left off when you return to the app
+- **Multiple Datasets** - Save and manage multiple travel datasets simultaneously
+- **Manual Entry History** - Your manual trip entries are preserved
+
+### **Storage Management**
+- **Quota Monitoring** - Real-time tracking of storage usage with visual indicators
+- **Storage Warnings** - Automatic alerts when storage space runs low (80% usage)
+- **Critical Alerts** - Emergency warnings when storage is nearly full (95% usage)
+- **Data Export** - Export all your data for backup purposes
+- **Data Import** - Restore data from backups
+- **Selective Deletion** - Remove specific datasets to free up space
+
+### **Technical Details**
+- **IndexedDB Backend** - Uses browser's native IndexedDB for optimal performance
+- **Dexie.js Framework** - Reliable database operations with transaction safety
+- **Compressed Storage** - Efficient data structures minimize storage footprint
+- **Cache Integration** - API response caching reduces redundant network requests
+- **Error Recovery** - Robust error handling with graceful degradation
+
+The storage system is designed to handle large Timeline files (50MB+) while maintaining fast performance and reliability across all modern browsers.
 
 ## License
 
 [MIT License](https://github.com/johneliud/travel_wrapped/blob/main/LICENSE)
-
----
-
-**Privacy Notice**: Your travel data is processed entirely on your device. No information is sent to external servers or stored remotely.
