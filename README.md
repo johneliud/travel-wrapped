@@ -66,6 +66,7 @@
 
 - **Frontend**: React 18 + TypeScript + Vite
 - **Styling**: Tailwind CSS
+- **Mapping**: React Leaflet + OpenStreetMap tiles
 - **Data Processing**: date-fns, Papaparse, Dexie.js
 - **Local Storage**: IndexedDB via Dexie.js for data persistence
 - **Build Tool**: Vite with Hot Module Replacement
@@ -83,6 +84,7 @@ src/
 │   ├── DataInput/          # Main data input orchestration with enhanced processing toggle
 │   ├── FileUpload/         # Timeline JSON file upload
 │   ├── ManualEntry/        # Manual trip entry form
+│   ├── MapView/            # Interactive map visualization with React Leaflet
 │   └── ProgressIndicator/  # Progress tracking components
 ├── services/
 │   ├── parser.ts          # Google Timeline JSON parser with enhanced processing
@@ -121,11 +123,20 @@ npm run lint
 
 ## Current Status
 
-### Phase 1.2: Data Input System (Complete)
-### Phase 1.3: Core Statistics Engine (Complete)
-### Phase 1.4: Local Storage System (Complete)
+### Phase 1.2: Data Input System ✅ Complete
+### Phase 1.3: Core Statistics Engine ✅ Complete
+### Phase 1.4: Local Storage System ✅ Complete
+### Phase 1.5: Basic Visualization ✅ Complete
 
-**Latest Features Added:**
+**Latest Features Added (Phase 1.5):**
+- **Interactive Maps** - React Leaflet integration with OpenStreetMap tiles
+- **Location Markers** - Clickable pins showing trip details and weather data
+- **Route Visualization** - Polylines connecting travel destinations
+- **Map Controls** - Zoom, pan, and auto-fit to show all locations
+- **Enhanced Popups** - Rich location information with place names and visit counts
+- **Responsive Design** - Mobile-optimized map interface
+
+**Previous Features:**
 - **Data Persistence** - Travel data automatically saved between sessions
 - **Storage Management** - IndexedDB-based storage with quota monitoring
 - **Multiple Datasets** - Save and manage multiple travel datasets
@@ -133,12 +144,11 @@ npm run lint
 - **Storage Warnings** - Alerts when storage space is running low
 - **Automatic Recovery** - Resumes from last session on page reload
 
-### Coming Next: Phase 1.5 - Basic Visualization
-- [ ] Setup React Leaflet map component
-- [ ] Display trip locations as pins
-- [ ] Simple polylines connecting locations
-- [ ] Map controls (zoom, pan)
-- [ ] Responsive map container
+### Coming Next: Phase 1.6 - Stats Display
+- [ ] Create stats cards component
+- [ ] Display core metrics with nice formatting
+- [ ] Distance equivalents (% around Earth, etc.)
+- [ ] Responsive layout for mobile/desktop
 
 ## Data Processing
 
@@ -160,6 +170,34 @@ Everything from basic processing, plus:
 - **Rich statistics** - top destinations, visit counts, enhanced insights
 
 **Privacy Note**: All processing happens locally in your browser. API calls are only made to enhance your data with publicly available information (location names, weather, country data). Your personal travel data never leaves your device.
+
+## Interactive Visualization
+
+Travel Wrapped now includes rich interactive visualization of your travel data:
+
+### **Interactive Maps**
+- **React Leaflet Integration** - Fast, responsive maps powered by OpenStreetMap
+- **Location Markers** - Each unique location shows as a clickable pin
+- **Smart Grouping** - Multiple trips to the same location are grouped together
+- **Auto-Fit Bounds** - Map automatically zooms to show all your travel locations
+
+### **Rich Information Popups**
+- **Location Details** - Coordinates, place names, and country information
+- **Trip Summaries** - Visit dates, duration, and trip counts
+- **Weather Data** - Temperature and conditions for enhanced trips
+- **Visit History** - Shows multiple visits to the same location
+
+### **Route Visualization** 
+- **Connected Routes** - Polylines show your travel paths between destinations
+- **Visual Journey** - See the flow of your travels across the map
+- **Distance Insights** - Visual representation of travel distances
+
+### **Enhanced Data Display**
+When using enhanced processing, maps show additional information:
+- **Weather Integration** - Temperature and weather icons in popups
+- **Location Names** - Real place names from geocoding APIs
+- **Country Information** - Country detection and proper formatting
+- **Smart Statistics** - Enhanced insights displayed alongside the map
 
 ## Local Storage System
 
