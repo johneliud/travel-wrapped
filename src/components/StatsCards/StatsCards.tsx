@@ -218,7 +218,42 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, isEnhanced = fals
         )}
       </div>
 
-      
+      {/* Enhanced Stats (if available) */}
+      {isEnhanced && 'hottestTrip' in stats && (
+        <div className="grid md:grid-cols-2 gap-6">
+          {stats.hottestTrip && (
+            <div className="bg-gradient-to-br from-red-50 to-orange-100 rounded-lg p-6 border border-red-200">
+              <div className="flex items-center mb-3">
+                <span className="text-2xl mr-3">🌡️</span>
+                <h3 className="text-lg font-semibold text-red-800">Hottest Adventure</h3>
+              </div>
+              <p className="text-2xl font-bold text-red-700">{stats.hottestTrip.temperature}°C</p>
+              <p className="text-red-600">{stats.hottestTrip.location}</p>
+              <p className="text-sm text-red-500">{stats.hottestTrip.date}</p>
+            </div>
+          )}
+
+          {stats.coldestTrip && (
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-100 rounded-lg p-6 border border-blue-200">
+              <div className="flex items-center mb-3">
+                <span className="text-2xl mr-3">❄️</span>
+                <h3 className="text-lg font-semibold text-blue-800">Coldest Adventure</h3>
+              </div>
+              <p className="text-2xl font-bold text-blue-700">{stats.coldestTrip.temperature}°C</p>
+              <p className="text-blue-600">{stats.coldestTrip.location}</p>
+              <p className="text-sm text-blue-500">{stats.coldestTrip.date}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Loading state for facts */}
+      {factsLoading && (
+        <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
+          <div className="animate-spin w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full mx-auto mb-2"></div>
+          <p className="text-gray-600 text-sm">Loading fun facts about your travels...</p>
+        </div>
+      )}
     </div>
   );
 };
