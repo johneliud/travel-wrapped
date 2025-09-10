@@ -123,3 +123,54 @@ export const numbersApiService = {
   }
 };
 
+// Function to get interesting facts about travel stats using Numbers API
+export async function getTravelFacts(stats: TravelStats | EnhancedTravelStats): Promise<DynamicFact[]> {
+  const factsToFetch: Array<{ 
+    value: number; 
+    type: 'math' | 'trivia' | 'date' | 'year';
+    category: 'distance' | 'countries' | 'cities' | 'trips';
+  }> = [];
+  
+  // Get facts about key numbers
+  if (stats.totalDistanceKm > 0) {
+    factsToFetch.push({ 
+      value: Math.round(stats.totalDistanceKm), 
+      type: 'trivia' as const,
+      category: 'distance' as const
+    });
+  }
+  
+  if (stats.uniqueCountries > 0) {
+    factsToFetch.push({ 
+      value: stats.uniqueCountries, 
+      type: 'trivia' as const,
+      category: 'countries' as const  
+    });
+  }
+  
+  if (stats.uniqueCities > 0) {
+    factsToFetch.push({ 
+      value: stats.uniqueCities, 
+      type: 'math' as const,
+      category: 'cities' as const
+    });
+  }
+  
+  if (stats.totalTrips > 0) {
+    factsToFetch.push({ 
+      value: stats.totalTrips, 
+      type: 'trivia' as const,
+      category: 'trips' as const
+    });
+  }
+
+  const facts = await numbersApiService.getMultipleFacts(
+    factsToFetch.map(({ value, type }) => ({ value, type }))
+  );
+  
+  // Add category information
+  return facts.map((fact, index) => ({
+    ...fact,
+    category: factsToFetch[index]?.category || ('distance' as const)
+  }));
+}
