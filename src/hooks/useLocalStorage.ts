@@ -41,5 +41,24 @@ export const useLocalStorage = (): UseLocalStorageReturn => {
     }
   }, [isSupported]);
 
+  const clearAllData = useCallback(async () => {
+    if (!isSupported) {
+      throw new Error('IndexedDB not supported');
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      await storageService.clearAllData();
+      await getQuotaInfo(); // Refresh quota info after clearing
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to clear data';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isSupported, getQuotaInfo]);
+
   
 };
