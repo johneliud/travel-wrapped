@@ -110,7 +110,87 @@ export const MapView: React.FC<MapViewProps> = ({ trips, className = '' }) => {
     );
   }
 
-  
+  return (
+    <div className={`relative ${className}`}>
+      <MapContainer
+        center={defaultCenter}
+        zoom={defaultZoom}
+        style={{ height: '100%', width: '100%' }}
+        className="rounded-lg"
+      >
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        />
+        
+        {/* Fit bounds to show all markers */}
+        {bounds && <FitBounds bounds={bounds} />}
+        
+        {/* Polylines connecting locations */}
+        {polylinePoints.length > 0 && (
+          <Polyline
+            positions={polylinePoints}
+            color="#3b82f6"
+            weight={2}
+            opacity={0.6}
+          />
+        )}
+        
+        {/* Markers for each unique location */}
+        {locations.map((location, index) => (
+          <Marker
+            key={`${location.latLng.latitude},${location.latLng.longitude}`}
+            position={[location.latLng.latitude, location.latLng.longitude]}
+          >
+            <Popup>
+              <div className="text-sm">
+                <div className="font-semibold mb-1">
+                  📍 Location {index + 1}
+                </div>
+                <div className="mb-2 text-xs text-gray-600">
+                  {location.latLng.latitude.toFixed(4)}, {location.latLng.longitude.toFixed(4)}
+                </div>
+                <div className="space-y-1">
+                  {location.trips.slice(0, 3).map((trip, tripIndex) => {
+                    const placeName = 'placeName' in trip ? trip.placeName : 
+                                   'city' in trip ? trip.city : 'Unknown Location';
+                    const country = 'country' in trip ? trip.country : '';
+                    
+                    return (
+                      <div key={`${trip.id}-${tripIndex}`} className="text-xs">
+                        <div className="font-medium">
+                          {placeName || 'Unknown Location'}
+                          {country && ` (${country})`}
+                        </div>
+                        <div className="text-gray-500">
+                          {trip.startTime.toLocaleDateString()}
+                          {'weather' in trip && trip.weather && (
+                            <span className="ml-1">
+                              {trip.weather.temperature}°C {trip.weather.icon}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {location.trips.length > 3 && (
+                    <div className="text-xs text-gray-500">
+                      +{location.trips.length - 3} more trips
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+      
+      {/* Map controls info */}
+      <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm rounded px-2 py-1 text-xs text-gray-600 z-[1000]">
+        {locations.length} locations • {trips.length} trips
+      </div>
+    </div>
+  );
 };
 
 export default MapView;
