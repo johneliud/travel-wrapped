@@ -242,7 +242,42 @@ export const storageService = {
     }
   },
 
-  
+  // Export data for backup
+  async exportData(): Promise<{ travelData: StoredTravelData[], cache: StoredCacheEntry[] }> {
+    try {
+      const travelData = await db.travelData.toArray();
+      const cache = await db.cache.toArray();
+      
+      return { travelData, cache };
+    } catch (error) {
+      console.error('Failed to export data:', error);
+      throw new Error('Failed to export data from local storage');
+    }
+  },
+
+  // Import data from backup
+  async importData(data: { travelData: StoredTravelData[], cache?: StoredCacheEntry[] }): Promise<void> {
+    try {
+      await db.transaction('rw', db.travelData, db.cache, async () => {
+        // Clear existing data
+        await db.travelData.clear();
+        await db.cache.clear();
+        
+        // Import travel data
+        if (data.travelData.length > 0) {
+          await db.travelData.bulkAdd(data.travelData);
+        }
+        
+        // Import cache data if provided
+        if (data.cache && data.cache.length > 0) {
+          await db.cache.bulkAdd(data.cache);
+        }
+      });
+    } catch (error) {
+      console.error('Failed to import data:', error);
+      throw new Error('Failed to import data to local storage');
+    }
+  }
 };
 
 // Initialize database and handle errors
