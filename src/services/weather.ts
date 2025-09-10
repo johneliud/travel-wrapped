@@ -1,4 +1,5 @@
 import type { LatLng } from '../types/travel';
+import { storageService } from './storage';
 
 export interface WeatherData {
   temperature: number;
@@ -28,12 +29,18 @@ export class WeatherService {
    * Get historical weather data for a location and date range
    */
   static async getHistoricalWeather(params: HistoricalWeatherParams): Promise<WeatherData[]> {
-    const cacheKey = `${params.coords.latitude.toFixed(2)},${params.coords.longitude.toFixed(2)}-${params.startDate}-${params.endDate}`;
+    const cacheKey = `weather_historical_${params.coords.latitude.toFixed(2)},${params.coords.longitude.toFixed(2)}-${params.startDate}-${params.endDate}`;
     
-    // Check cache first
-    const cached = this.cache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION_MS) {
-      return cached.data;
+    // Check persistent cache first
+    const cached = await storageService.getFromCache(cacheKey);
+    if (cached) {
+      return cached as WeatherData[];
+    }
+
+    // Fallback to memory cache for compatibility
+    const memoryCached = this.cache.get(cacheKey);
+    if (memoryCached && Date.now() - memoryCached.timestamp < this.CACHE_DURATION_MS) {
+      return memoryCached.data;
     }
 
     try {
@@ -67,7 +74,8 @@ export class WeatherService {
 
       const weatherData = this.parseWeatherResponse(data);
 
-      // Cache the results
+      // Cache the results in persistent storage and memory
+      await storageService.saveToCache(cacheKey, weatherData, 1, 'weather'); // 1 hour
       this.cache.set(cacheKey, {
         data: weatherData,
         timestamp: Date.now()
