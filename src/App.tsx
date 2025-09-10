@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { DataInput } from './components/DataInput'
 import { MapView } from './components/MapView'
+import { StatsCards } from './components/StatsCards'
 import { useTravelData, useProcessingResult } from './hooks/useTravelData'
 import { useStorageQuota } from './hooks/useStorageQuota'
 import type { ProcessingResult, EnhancedProcessingResult } from './types/travel'
@@ -106,64 +107,60 @@ function App() {
             )}
           </div>
           
-          <div className="grid md:grid-cols-3 gap-6 mb-6">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-blue-800 mb-3">Travel Stats</h3>
-              <ul className="space-y-2 text-blue-700">
-                <li><span className="font-medium">Total Trips:</span> {trips.length}</li>
-                <li><span className="font-medium">Distance:</span> {stats.totalDistanceKm.toLocaleString()} km</li>
-                <li><span className="font-medium">Countries:</span> {stats.uniqueCountries}</li>
-                <li><span className="font-medium">Cities:</span> {stats.uniqueCities}</li>
-                <li><span className="font-medium">Longest Trip:</span> {stats.longestTripKm} km</li>
-              </ul>
+          {/* Gamified Stats Display */}
+          <StatsCards 
+            trips={trips}
+            stats={stats}
+            isEnhanced={enhanced}
+          />
+
+          {/* Processing Info */}
+          <div className="mt-6 bg-gradient-to-br from-gray-50 to-slate-100 rounded-lg p-4 border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+              <span className="text-xl mr-2">⚙️</span>
+              Processing Summary
+            </h3>
+            <div className="grid md:grid-cols-4 gap-4 text-sm">
+              <div className="text-center">
+                <div className="text-lg font-bold text-gray-700">{displayData.processedSegments}</div>
+                <div className="text-gray-600">Segments Processed</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-gray-700">{displayData.totalSegments}</div>
+                <div className="text-gray-600">Total Segments</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-gray-700">{Math.round((displayData.processedSegments / displayData.totalSegments) * 100)}%</div>
+                <div className="text-gray-600">Success Rate</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-gray-700">{displayData.errors.length}</div>
+                <div className="text-gray-600">Errors (Normal)</div>
+              </div>
             </div>
-            
-            {enhanced && (() => {
-              const enhancedStats = getEnhancedStats(stats);
-              return (
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-purple-800 mb-3">Enhanced Insights</h3>
-                  <ul className="space-y-2 text-purple-700">
-                    <li><span className="font-medium">Countries Visited:</span> {enhancedStats.countries.length}</li>
-                    {enhancedStats.countries.slice(0, 2).map((country) => (
-                      <li key={country.code}>• {country.flag} {country.name} ({country.visitCount} visits)</li>
-                    ))}
-                    {enhancedStats.hottestTrip && (
-                      <li><span className="font-medium">Hottest:</span> {enhancedStats.hottestTrip.temperature}°C in {enhancedStats.hottestTrip.location}</li>
-                    )}
-                    {enhancedStats.coldestTrip && (
-                      <li><span className="font-medium">Coldest:</span> {enhancedStats.coldestTrip.temperature}°C in {enhancedStats.coldestTrip.location}</li>
-                    )}
-                  </ul>
-                </div>
-              );
-            })()}
-            
-            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-green-800 mb-3">Processing Info</h3>
-              <ul className="space-y-2 text-green-700">
-                <li><span className="font-medium">Segments:</span> {displayData.processedSegments} / {displayData.totalSegments}</li>
-                <li><span className="font-medium">Errors:</span> {displayData.errors.length}</li>
-                <li><span className="font-medium">Success Rate:</span> {Math.round((displayData.processedSegments / displayData.totalSegments) * 100)}%</li>
-                <li><span className="font-medium">Date Range:</span><br />
-                    <span className="text-sm">{stats.firstTripDate.toDateString()} - {stats.lastTripDate.toDateString()}</span>
-                </li>
-              </ul>
+            <div className="mt-3 text-center text-xs text-gray-500">
+              <span className="font-medium">Date Range:</span> {stats.firstTripDate.toDateString()} → {stats.lastTripDate.toDateString()}
             </div>
           </div>
 
+          {/* Top Destinations (Enhanced only) */}
           {enhanced && (() => {
             const enhancedStats = getEnhancedStats(stats);
             return enhancedStats.topDestinations.length > 0 && (
-              <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg p-4 mb-6">
-                <h3 className="text-lg font-semibold text-orange-800 mb-3">Top Destinations</h3>
+              <div className="mt-6 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg p-6 border border-orange-200">
+                <h3 className="text-lg font-semibold text-orange-800 mb-4 flex items-center">
+                  <span className="text-xl mr-2">🏆</span>
+                  Top Destinations
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {enhancedStats.topDestinations.slice(0, 3).map((dest, index) => (
-                    <div key={`${dest.city}-${dest.country}`} className="text-center">
-                      <div className="text-2xl mb-1">{index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}</div>
-                      <div className="font-medium text-orange-800">{dest.city}</div>
-                      <div className="text-sm text-orange-600">{dest.country}</div>
-                      <div className="text-xs text-orange-500">{dest.visits} visits • {dest.totalDays} days</div>
+                    <div key={`${dest.city}-${dest.country}`} className="text-center bg-white/60 rounded-lg p-4 border border-orange-100">
+                      <div className="text-3xl mb-2">{index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}</div>
+                      <div className="font-bold text-orange-800 text-lg">{dest.city}</div>
+                      <div className="text-orange-600 font-medium">{dest.country}</div>
+                      <div className="text-sm text-orange-500 mt-1">
+                        {dest.visits} visits • {dest.totalDays} days total
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -181,7 +178,24 @@ function App() {
             </div>
           )}
 
-          <div className="flex flex-wrap gap-4">
+          <div className="mt-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
+            <h4 className="text-lg font-semibold text-green-800 mb-2 flex items-center">
+              <span className="text-xl mr-2">🎉</span>
+              Phase 1.6 Stats Display Complete!
+            </h4>
+            <p className="text-green-700 text-sm mb-3">
+              Gamified stats display with achievements, travel levels, personality insights, and fun facts from Numbers API.
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs text-green-600">
+              <div>Gamified Cards</div>
+              <div>Achievement System</div>
+              <div>Travel Levels</div>
+              <div>Personality Types</div>
+              <div>Numbers API Facts</div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-4 mt-6">
             <button
               onClick={handleBackToInput}
               className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
@@ -196,7 +210,7 @@ function App() {
             </button>
             {enhanced && (
               <span className="text-xs text-gray-500 self-center">
-                ✨ Enhanced with location, weather & country data
+                Enhanced with location, weather & country data + gamification
               </span>
             )}
           </div>
