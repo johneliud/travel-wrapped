@@ -21,5 +21,19 @@ interface FitBoundsProps {
   bounds: L.LatLngBoundsExpression;
 }
 
+// Component to fit map bounds to show all markers
+const FitBounds: React.FC<FitBoundsProps> = ({ bounds }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (bounds) {
+      map.fitBounds(bounds, { padding: [20, 20] });
+    }
+  }, [map, bounds]);
+  
+  return null;
+};
+
+
 
 export default MapView;
