@@ -174,3 +174,54 @@ export async function getTravelFacts(stats: TravelStats | EnhancedTravelStats): 
     category: factsToFetch[index]?.category || ('distance' as const)
   }));
 }
+
+// Function to check which achievements are unlocked
+export function calculateAchievements(stats: TravelStats | EnhancedTravelStats): Achievement[] {
+  const achievements: Achievement[] = [];
+  
+  for (const def of ACHIEVEMENT_DEFINITIONS) {
+    let unlocked = false;
+    
+    switch (def.category) {
+      case 'special':
+        if (def.id === 'first_steps') {
+          unlocked = stats.totalTrips > 0;
+        } else if (def.id === 'arctic_explorer' && 'coldestTrip' in stats && stats.coldestTrip) {
+          unlocked = stats.coldestTrip.temperature < -10;
+        } else if (def.id === 'desert_walker' && 'hottestTrip' in stats && stats.hottestTrip) {
+          unlocked = stats.hottestTrip.temperature > 40;
+        } else if (def.id === 'weather_warrior' && 'hottestTrip' in stats && 'coldestTrip' in stats) {
+          unlocked = Boolean(stats.hottestTrip && stats.coldestTrip && 
+                    stats.hottestTrip.temperature > 40 && 
+                    stats.coldestTrip.temperature < -10);
+        }
+        break;
+        
+      case 'distance':
+        unlocked = def.threshold ? stats.totalDistanceKm >= def.threshold : false;
+        break;
+        
+      case 'countries':
+        unlocked = def.threshold ? stats.uniqueCountries >= def.threshold : false;
+        break;
+        
+      case 'cities':
+        unlocked = def.threshold ? stats.uniqueCities >= def.threshold : false;
+        break;
+        
+      case 'trips':
+        unlocked = def.threshold ? stats.totalTrips >= def.threshold : false;
+        break;
+    }
+    
+    achievements.push({ ...def, unlocked });
+  }
+  
+  return achievements.sort((a, b) => {
+    // Show unlocked achievements first
+    if (a.unlocked !== b.unlocked) {
+      return a.unlocked ? -1 : 1;
+    }
+    return 0;
+  });
+}
