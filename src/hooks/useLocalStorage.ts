@@ -78,5 +78,43 @@ export const useLocalStorage = (): UseLocalStorageReturn => {
     }
   }, [isSupported]);
 
-  
+  const importData = useCallback(async (data: { travelData: StoredTravelData[], cache?: StoredCacheEntry[] }) => {
+    if (!isSupported) {
+      throw new Error('IndexedDB not supported');
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      await storageService.importData(data);
+      await getQuotaInfo(); // Refresh quota info after import
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to import data';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isSupported, getQuotaInfo]);
+
+  useEffect(() => {
+    checkSupport();
+  }, [checkSupport]);
+
+  useEffect(() => {
+    if (isSupported) {
+      getQuotaInfo();
+    }
+  }, [isSupported, getQuotaInfo]);
+
+  return {
+    isSupported,
+    quotaInfo,
+    isLoading,
+    error,
+    clearAllData,
+    getQuotaInfo,
+    exportData,
+    importData
+  };
 };
