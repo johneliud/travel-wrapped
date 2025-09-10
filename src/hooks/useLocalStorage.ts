@@ -60,5 +60,23 @@ export const useLocalStorage = (): UseLocalStorageReturn => {
     }
   }, [isSupported, getQuotaInfo]);
 
+  const exportData = useCallback(async () => {
+    if (!isSupported) {
+      throw new Error('IndexedDB not supported');
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      return await storageService.exportData();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to export data';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isSupported]);
+
   
 };
