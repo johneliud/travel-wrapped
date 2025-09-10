@@ -225,3 +225,46 @@ export function calculateAchievements(stats: TravelStats | EnhancedTravelStats):
     return 0;
   });
 }
+
+// Function to get level and progress from total distance
+export function getTravelLevel(totalDistanceKm: number): { level: number; progress: number; nextLevelKm: number; title: string } {
+  // Levels based on distance milestones
+  const levels = [
+    { km: 0, title: 'Stay-at-Home' },
+    { km: 500, title: 'Local Explorer' },
+    { km: 1000, title: 'Regional Wanderer' },
+    { km: 2500, title: 'Country Hopper' },
+    { km: 5000, title: 'Continental Traveler' },
+    { km: 10000, title: 'International Adventurer' },
+    { km: 25000, title: 'Globe Trotter' },
+    { km: 50000, title: 'World Explorer' },
+    { km: 100000, title: 'Epic Voyager' },
+    { km: 200000, title: 'Legendary Nomad' }
+  ];
+  
+  let currentLevel = levels[0];
+  let nextLevel = levels[1];
+  
+  for (let i = 0; i < levels.length - 1; i++) {
+    if (totalDistanceKm >= levels[i].km && totalDistanceKm < levels[i + 1].km) {
+      currentLevel = levels[i];
+      nextLevel = levels[i + 1];
+      break;
+    }
+  }
+  
+  // If exceeded all levels
+  if (totalDistanceKm >= levels[levels.length - 1].km) {
+    currentLevel = levels[levels.length - 1];
+    nextLevel = { km: levels[levels.length - 1].km * 2, title: 'Cosmic Traveler' };
+  }
+  
+  const progress = ((totalDistanceKm - currentLevel.km) / (nextLevel.km - currentLevel.km)) * 100;
+  
+  return {
+    level: levels.indexOf(currentLevel) + 1,
+    progress: Math.min(100, progress),
+    nextLevelKm: nextLevel.km - totalDistanceKm,
+    title: currentLevel.title
+  };
+}
