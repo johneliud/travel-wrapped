@@ -19,7 +19,7 @@ import {
 import { AppErrorHandler } from '../../utils/errorHandling';
 
 interface DataInputProps {
-  onDataProcessed: (result: ProcessingResult | EnhancedProcessingResult) => void;
+  onDataProcessed: (result: ProcessingResult | EnhancedProcessingResult, fileName?: string, fileSize?: number) => void;
 }
 
 export const DataInput: React.FC<DataInputProps> = ({ onDataProcessed }) => {
@@ -123,7 +123,7 @@ export const DataInput: React.FC<DataInputProps> = ({ onDataProcessed }) => {
       }
 
       setUploadState(prev => ({ ...prev, status: 'success', progress: 100 }));
-      onDataProcessed(result);
+      onDataProcessed(result, uploadState.fileName, uploadState.fileSize);
 
     } catch (error) {
       console.error('File processing error:', error);
