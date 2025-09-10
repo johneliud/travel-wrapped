@@ -141,6 +141,31 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, isEnhanced = fals
         </div>
       </div>
 
+      {/* Fun Facts from Numbers API */}
+      {!factsLoading && travelFacts.length > 0 && (
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-6 border border-indigo-200">
+          <h3 className="text-lg font-semibold text-indigo-800 mb-4 flex items-center">
+            <span className="text-2xl mr-2">🎲</span>
+            Fun Facts About Your Numbers
+          </h3>
+          <div className="grid md:grid-cols-2 gap-4">
+            {travelFacts.slice(0, 4).map((fact, index) => (
+              <div key={index} className="bg-white/60 rounded-lg p-4 border border-indigo-100">
+                <div className="flex items-start">
+                  <span className="text-2xl font-bold text-indigo-600 mr-3">{fact.number}</span>
+                  <div>
+                    <p className="text-sm text-indigo-700">{fact.fact}</p>
+                    <span className="text-xs text-indigo-500 capitalize mt-1 inline-block">
+                      {fact.category} • {fact.type}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       
     </div>
   );
