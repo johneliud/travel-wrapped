@@ -98,6 +98,63 @@ export const storageService = {
     }
   },
 
+  async loadTravelData(id?: string): Promise<StoredTravelData | null> {
+    try {
+      if (id) {
+        return await db.travelData.get(id) || null;
+      }
+      
+      // Get the most recent data if no ID specified
+      const latest = await db.travelData.orderBy('updatedAt').reverse().first();
+      return latest || null;
+    } catch (error) {
+      console.error('Failed to load travel data:', error);
+      throw new Error('Failed to load travel data from local storage');
+    }
+  },
+
+  async updateTravelData(id: string, updates: Partial<StoredTravelData>): Promise<void> {
+    try {
+      const updateData = {
+        ...updates,
+        updatedAt: new Date()
+      };
+      
+      await db.travelData.update(id, updateData);
+    } catch (error) {
+      console.error('Failed to update travel data:', error);
+      throw new Error('Failed to update travel data in local storage');
+    }
+  },
+
+  async getAllTravelData(): Promise<StoredTravelData[]> {
+    try {
+      return await db.travelData.orderBy('updatedAt').reverse().toArray();
+    } catch (error) {
+      console.error('Failed to get all travel data:', error);
+      throw new Error('Failed to retrieve travel data from local storage');
+    }
+  },
+
+  async deleteTravelData(id: string): Promise<void> {
+    try {
+      await db.travelData.delete(id);
+    } catch (error) {
+      console.error('Failed to delete travel data:', error);
+      throw new Error('Failed to delete travel data from local storage');
+    }
+  },
+
+  async clearAllData(): Promise<void> {
+    try {
+      await db.travelData.clear();
+      await db.cache.clear();
+    } catch (error) {
+      console.error('Failed to clear all data:', error);
+      throw new Error('Failed to clear all data from local storage');
+    }
+  },
+
   
 };
 
