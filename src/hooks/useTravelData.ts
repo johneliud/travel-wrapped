@@ -104,4 +104,95 @@ export const useTravelData = (): UseTravelDataReturn => {
     }
   }, []);
 
+  const loadTravelData = useCallback(async (id?: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const stored = await storageService.loadTravelData(id);
+      
+      if (stored) {
+        setTravelData(convertStoredToApp(stored));
+      } else {
+        setTravelData(null);
+        setError(id ? 'Travel data not found' : 'No saved travel data found');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load travel data';
+      setError(errorMessage);
+      setTravelData(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [convertStoredToApp]);
+
+  const updateTravelData = useCallback(async (updates: Partial<AppTravelData>) => {
+    if (!travelData?.storageId) {
+      throw new Error('No travel data ID to update');
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Prepare updates for storage
+      const storageUpdates: Partial<StoredTravelData> = {};
+      
+      if (updates.basicTrips !== undefined) storageUpdates.basicTrips = updates.basicTrips;
+      if (updates.enhancedTrips !== undefined) storageUpdates.enhancedTrips = updates.enhancedTrips;
+      if (updates.basicStats !== undefined) storageUpdates.basicStats = updates.basicStats;
+      if (updates.enhancedStats !== undefined) storageUpdates.enhancedStats = updates.enhancedStats;
+      if (updates.manualTrips !== undefined) storageUpdates.manualTrips = updates.manualTrips;
+      if (updates.errors !== undefined) storageUpdates.errors = updates.errors;
+      if (updates.totalSegments !== undefined) storageUpdates.totalSegments = updates.totalSegments;
+      if (updates.processedSegments !== undefined) storageUpdates.processedSegments = updates.processedSegments;
+      if (updates.apiEnrichmentProgress !== undefined) storageUpdates.apiEnrichmentProgress = updates.apiEnrichmentProgress;
+      if (updates.fileName !== undefined) storageUpdates.fileName = updates.fileName;
+      if (updates.fileSize !== undefined) storageUpdates.fileSize = updates.fileSize;
+
+      await storageService.updateTravelData(travelData.storageId, storageUpdates);
+
+      // Update local state
+      setTravelData({
+        ...travelData,
+        ...updates,
+        updatedAt: new Date()
+      });
+
+      // Refresh the list
+      await refreshStoredDataList();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update travel data';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [travelData]);
+
+  const deleteTravelData = useCallback(async (id: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      await storageService.deleteTravelData(id);
+      
+      // If we deleted the current data, clear it
+      if (travelData?.storageId === id) {
+        setTravelData(null);
+      }
+
+      // Refresh the list
+      await refreshStoredDataList();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete travel data';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [travelData]);
+
   
+};
+
