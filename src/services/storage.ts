@@ -55,7 +55,51 @@ class TravelWrappedDB extends Dexie {
 
 export const db = new TravelWrappedDB();
 
+export const storageService = {
+  async saveTravelData(data: {
+    basicTrips: ProcessedTrip[];
+    enhancedTrips?: EnhancedTrip[];
+    basicStats: TravelStats;
+    enhancedStats?: EnhancedTravelStats;
+    manualTrips?: ManualTrip[];
+    errors: string[];
+    totalSegments: number;
+    processedSegments: number;
+    apiEnrichmentProgress?: number;
+    fileName?: string;
+    fileSize?: number;
+  }): Promise<string> {
+    try {
+      const now = new Date();
+      const id = `travel_data_${now.getTime()}`;
+      
+      const storedData: StoredTravelData = {
+        id,
+        createdAt: now,
+        updatedAt: now,
+        fileName: data.fileName,
+        fileSize: data.fileSize,
+        basicTrips: data.basicTrips,
+        enhancedTrips: data.enhancedTrips,
+        basicStats: data.basicStats,
+        enhancedStats: data.enhancedStats,
+        manualTrips: data.manualTrips || [],
+        errors: data.errors,
+        totalSegments: data.totalSegments,
+        processedSegments: data.processedSegments,
+        apiEnrichmentProgress: data.apiEnrichmentProgress
+      };
 
+      await db.travelData.add(storedData);
+      return id;
+    } catch (error) {
+      console.error('Failed to save travel data:', error);
+      throw new Error('Failed to save travel data to local storage');
+    }
+  },
+
+  
+};
 
 // Initialize database and handle errors
 db.on('ready', async () => {
