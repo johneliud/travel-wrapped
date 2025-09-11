@@ -1,11 +1,12 @@
-import { differenceInMinutes, format } from 'date-fns';
+import { differenceInMinutes, format, getMonth, differenceInDays, startOfDay } from 'date-fns';
 import { GeocodingService } from './geocoding';
 import { CountriesService } from './countries';
 import { WeatherService } from './weather';
 import type { 
   ProcessedTrip, 
   LatLng, 
-  TravelStats
+  TravelStats,
+  EnhancedTravelStats as EnhancedTravelStatsType
 } from '../types/travel';
 
 export interface EnhancedTrip {
@@ -391,9 +392,14 @@ export class TravelCalculations {
       
       topDestinations: Array.from(cityStats.values())
         .sort((a, b) => b.visits - a.visits)
-        .slice(0, 10)
+        .slice(0, 10),
+
+      // Advanced statistics
+      ...this.calculateAdvancedStatistics(trips)
     };
   }
+
+  
 
   /**
    * Deduplicate nearby places based on proximity
