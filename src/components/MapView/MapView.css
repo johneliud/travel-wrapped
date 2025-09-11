@@ -1,0 +1,71 @@
+/* Custom marker styles */
+.custom-weather-marker, .custom-flag-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.custom-weather-marker .flex {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.custom-flag-marker > div {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* Animated polylines */
+.leaflet-interactive {
+  transition: opacity 0.3s ease;
+}
+
+.leaflet-interactive:hover {
+  opacity: 1 !important;
+}
+
+/* Map container enhancements */
+.leaflet-container {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+/* Custom popup styling */
+.leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.leaflet-popup-tip {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: none;
+  border-right: none;
+}
+
+/* Enhanced tile fade-in */
+.leaflet-tile {
+  opacity: 0;
+  animation: tileAppear 0.5s ease forwards;
+}
+
+@keyframes tileAppear {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Pulse animation for route lines */
+@keyframes routePulse {
+  0%, 100% {
+    stroke-width: 2;
+    opacity: 0.6;
+  }
+  50% {
+    stroke-width: 4;
+    opacity: 0.9;
+  }
+}
+
+.route-pulse {
+  animation: routePulse 2s ease-in-out infinite;
+}

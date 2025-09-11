@@ -247,6 +247,78 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, isEnhanced = fals
         </div>
       )}
 
+      {/* Countries Visited (Enhanced Stats) */}
+      {isEnhanced && 'countries' in stats && stats.countries && stats.countries.length > 0 && (
+        <div className="bg-gradient-to-br from-blue-50 to-purple-100 rounded-lg p-6 border border-blue-200">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-blue-800 flex items-center">
+              <span className="text-2xl mr-2">🌍</span>
+              Countries Visited
+            </h3>
+            <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+              {stats.countries.length} countries
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+            {stats.countries.slice(0, 24).map((country) => (
+              <div 
+                key={country.code}
+                className="text-center p-2 bg-white/60 rounded-lg border border-blue-100 hover:bg-white hover:shadow-md transition-all"
+                title={`${country.name} - ${country.visitCount} visit${country.visitCount > 1 ? 's' : ''}`}
+              >
+                <div className="text-2xl mb-1">{country.flag}</div>
+                <div className="text-xs font-medium text-blue-800 truncate">{country.code}</div>
+                {country.visitCount > 1 && (
+                  <div className="text-xs text-blue-600 mt-1">{country.visitCount}x</div>
+                )}
+              </div>
+            ))}
+          </div>
+          
+          {stats.countries.length > 24 && (
+            <div className="mt-4 text-center">
+              <div className="inline-flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                +{stats.countries.length - 24} more countries
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Top Destinations (Enhanced Stats) */}
+      {isEnhanced && 'topDestinations' in stats && stats.topDestinations && stats.topDestinations.length > 0 && (
+        <div className="bg-gradient-to-br from-amber-50 to-orange-100 rounded-lg p-6 border border-amber-200">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-amber-800 flex items-center">
+              <span className="text-2xl mr-2">🏙️</span>
+              Top Destinations
+            </h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {stats.topDestinations.slice(0, 6).map((dest, index) => (
+              <div 
+                key={`${dest.city}-${dest.country}`}
+                className="bg-white/60 rounded-lg p-4 border border-amber-100 hover:bg-white hover:shadow-md transition-all"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-2xl">
+                    {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '📍'}
+                  </div>
+                  <div className="text-xs text-amber-600">#{index + 1}</div>
+                </div>
+                <div className="font-semibold text-amber-800 mb-1">{dest.city}</div>
+                <div className="text-sm text-amber-700">{dest.country}</div>
+                <div className="text-xs text-amber-600 mt-2">
+                  {dest.visits} visit{dest.visits > 1 ? 's' : ''} • {dest.totalDays} day{dest.totalDays > 1 ? 's' : ''}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Loading state for facts */}
       {factsLoading && (
         <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
