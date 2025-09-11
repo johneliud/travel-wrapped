@@ -559,6 +559,48 @@ export class TravelCalculations {
     };
   }
 
+  /**
+   * Calculate timezone crossings
+   */
+  private static calculateTimezoneCrossings(trips: EnhancedTrip[]): { count: number; transitions: Array<{ fromTimezone: string; toTimezone: string; location: string; date: string }> } {
+    const transitions: Array<{ fromTimezone: string; toTimezone: string; location: string; date: string }> = [];
+    
+    if (trips.length < 2) {
+      return { count: 0, transitions };
+    }
+
+    const sortedTrips = trips.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+    
+    // Approximate timezone detection based on longitude
+    const getTimezoneFromLongitude = (longitude: number): string => {
+      const timezoneOffset = Math.round(longitude / 15);
+      const sign = timezoneOffset >= 0 ? '+' : '';
+      return `UTC${sign}${timezoneOffset}`;
+    };
+
+    let lastTimezone = getTimezoneFromLongitude(sortedTrips[0].location.longitude);
+
+    for (let i = 1; i < sortedTrips.length; i++) {
+      const trip = sortedTrips[i];
+      const currentTimezone = getTimezoneFromLongitude(trip.location.longitude);
+      
+      if (currentTimezone !== lastTimezone) {
+        transitions.push({
+          fromTimezone: lastTimezone,
+          toTimezone: currentTimezone,
+          location: trip.city || trip.placeName || 'Unknown location',
+          date: format(trip.startTime, 'yyyy-MM-dd')
+        });
+        lastTimezone = currentTimezone;
+      }
+    }
+
+    return {
+      count: transitions.length,
+      transitions
+    };
+  }
+
   
 
   /**
