@@ -138,22 +138,15 @@ npm run lint
 
 ## Current Status
 
-### Completed: Phase 2.2 - Free API Integration  
-- **Enhanced Nominatim Geocoding** - Automatic location lookup for manual entries with suggestions
-- **Open-Meteo Weather Integration** - Historical weather data with retry logic and caching
-- **REST Countries API** - Country information, flags, and batch operations
-- **Circuit Breaker Pattern** - Prevents cascading failures with automatic recovery
-- **Advanced Caching** - Multi-level caching (memory + persistent storage) for optimal performance
-- **Graceful Error Handling** - Fallback mechanisms ensure the app continues working even when APIs fail
+### Completed: Phase 2.4 - Advanced Statistics
+- **Busiest Travel Periods** - Identifies your most active travel month and season with trip counts and distances
+- **Longest Travel Streak** - Calculates consecutive travel periods with gap tolerance and comprehensive metrics
+- **Timezone Adventures** - Tracks timezone crossings with detailed transition history and approximate calculations
+- **Transport Mode Breakdown** - Analyzes distance distribution across Flying, Driving, Walking, and other transport modes
+- **Enhanced Analytics** - Smart categorization based on distance thresholds and Google Timeline activity types
 
-### Completed: Phase 2.3 - Visual Enhancements  
-- **Custom Map Styling** - 5 beautiful tile layer options (Bright, Outdoors, Dark, Watercolor, Terrain) from Stadia Maps
-- **Animated Travel Routes** - Enhanced polylines with gradient colors, dash patterns, and multiple layers for cinematic effect
-- **Weather Icon Markers** - Custom markers display weather conditions and temperatures for enhanced trips
-- **Country Flag Markers** - Flag-based markers show country information with proper Unicode flag emojis
-- **Visual Polish** - Backdrop blur effects, CSS animations, enhanced popups, and comprehensive styling improvements
-
-### Coming Next: Phase 2.4 - Future Enhancements
+### Coming Next: Phase 2.5 - Future Enhancements
+- [ ] Share card generation with HTML5 Canvas
 - [ ] Interactive data filtering and search
 - [ ] Timeline scrubber for date-based exploration
 - [ ] Advanced sharing and export options
@@ -306,6 +299,45 @@ Travel Wrapped includes a robust local storage system that ensures your data is 
 - **Error Recovery** - Robust error handling with graceful degradation
 
 The storage system is designed to handle large Timeline files (50MB+) while maintaining fast performance and reliability across all modern browsers.
+
+## Advanced Travel Analytics
+
+Travel Wrapped now includes sophisticated analytics that provide deeper insights into your travel patterns and behavior:
+
+### **Travel Pattern Analysis**
+- **Busiest Month Detection** - Automatically identifies your most active travel month based on trip frequency and total distance
+- **Seasonal Travel Preferences** - Analyzes your travel activity across Spring, Summer, Autumn, and Winter with detailed breakdowns
+- **Activity Metrics** - Combines trip counts with distance traveled for comprehensive activity assessment
+
+### **Travel Streak Analysis**
+- **Consecutive Travel Detection** - Identifies your longest travel streak with intelligent gap tolerance (7-day default)
+- **Streak Metrics** - Tracks total days, trip count, countries visited, and distance covered during streaks
+- **Travel Momentum** - Helps you understand your sustained travel periods and travel intensity
+
+### **Global Mobility Insights**
+- **Timezone Crossing Tracker** - Monitors your movement across different time zones using longitude-based calculations
+- **Transition History** - Records detailed timezone transitions with locations and dates
+- **World Coverage** - Approximates your global travel reach through timezone analysis
+
+### **Transport Mode Intelligence**
+- **Automatic Categorization** - Smart classification of travel modes based on distance and Google Timeline activity types:
+  - **Flying**: Long-distance travel (>500km) or flights detected in Timeline data
+  - **Driving**: Medium-distance travel (20-500km) or car/bus activities
+  - **Walking**: Short-distance travel (<20km) or walking activities
+- **Distance Distribution** - Percentage breakdown of how you travel with detailed statistics
+- **Mode Analytics** - Trip counts, average distances, and travel preferences per transport type
+
+### **Smart Data Processing**
+- **Timeline Activity Analysis** - Leverages Google Timeline's activity classifications (DRIVING, WALKING, IN_PLANE, etc.)
+- **Distance-Based Logic** - Uses travel distance as a secondary factor for transport mode detection
+- **Confidence Scoring** - Prioritizes higher-confidence data from Google's location services
+- **Fallback Mechanisms** - Graceful handling when specific activity data is unavailable
+
+### **Statistical Accuracy**
+- **7-Day Gap Tolerance** - Travel streaks allow up to 7 days between trips for realistic streak calculation
+- **15-Degree Timezone Approximation** - Uses longitude-based timezone estimation for crossing detection
+- **Proximity Deduplication** - Merges nearby location visits (0.5km threshold) for cleaner analytics
+- **Seasonal Definitions** - Standard meteorological seasons (Spring: Mar-May, Summer: Jun-Aug, etc.)
 
 ## API Integration Architecture
 
