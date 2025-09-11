@@ -455,6 +455,42 @@ export class TravelCalculations {
     };
   }
 
+  /**
+   * Calculate busiest season
+   */
+  private static calculateBusiestSeason(trips: EnhancedTrip[]): { season: 'Spring' | 'Summer' | 'Autumn' | 'Winter'; tripsCount: number; totalDistance: number; months: string[] } | undefined {
+    if (trips.length === 0) return undefined;
+
+    const seasons = {
+      Spring: { months: [2, 3, 4], names: ['March', 'April', 'May'], tripsCount: 0, totalDistance: 0 },
+      Summer: { months: [5, 6, 7], names: ['June', 'July', 'August'], tripsCount: 0, totalDistance: 0 },
+      Autumn: { months: [8, 9, 10], names: ['September', 'October', 'November'], tripsCount: 0, totalDistance: 0 },
+      Winter: { months: [11, 0, 1], names: ['December', 'January', 'February'], tripsCount: 0, totalDistance: 0 }
+    };
+
+    trips.forEach(trip => {
+      const month = getMonth(trip.startTime); // 0-11
+      const distance = trip.distanceKm || 0;
+
+      Object.values(seasons).forEach(season => {
+        if (season.months.includes(month)) {
+          season.tripsCount++;
+          season.totalDistance += distance;
+        }
+      });
+    });
+
+    const [busiestSeasonName, busiestSeasonData] = Object.entries(seasons)
+      .sort(([, a], [, b]) => b.tripsCount - a.tripsCount)[0];
+
+    return {
+      season: busiestSeasonName as 'Spring' | 'Summer' | 'Autumn' | 'Winter',
+      tripsCount: busiestSeasonData.tripsCount,
+      totalDistance: Math.round(busiestSeasonData.totalDistance * 100) / 100,
+      months: busiestSeasonData.names
+    };
+  }
+
   
 
   /**
