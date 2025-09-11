@@ -22,7 +22,10 @@ export interface HistoricalWeatherParams {
 export class WeatherService {
   private static readonly BASE_URL = 'https://archive-api.open-meteo.com/v1/era5';
   private static readonly CURRENT_URL = 'https://api.open-meteo.com/v1/forecast';
-  private static readonly CACHE_DURATION_MS = 60 * 60 * 1000; // 1 hour
+  private static readonly CACHE_DURATION_HOURS = 24; // 24 hours for historical weather (it doesn't change)
+  private static readonly CACHE_DURATION_MS = 60 * 60 * 1000; // 1 hour for memory cache
+  private static readonly MAX_RETRIES = 3;
+  private static readonly RETRY_DELAY_MS = 1000;
   private static cache = new Map<string, { data: WeatherData[]; timestamp: number }>();
 
   /**
@@ -60,13 +63,17 @@ export class WeatherService {
         timezone: 'auto'
       });
 
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error(`Weather API error: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = await this.fetchWithRetry(url) as {
+        daily?: {
+          time?: string[];
+          temperature_2m_max?: number[];
+          temperature_2m_min?: number[];
+          temperature_2m_mean?: number[];
+          precipitation_sum?: number[];
+          weather_code?: number[];
+          wind_speed_10m_max?: number[];
+        };
+      };
       
       if (!data.daily) {
         throw new Error('No weather data available for this period');
@@ -74,8 +81,8 @@ export class WeatherService {
 
       const weatherData = this.parseWeatherResponse(data);
 
-      // Cache the results in persistent storage and memory
-      await storageService.saveToCache(cacheKey, weatherData, 1, 'weather'); // 1 hour
+      // Cache the results in persistent storage (24 hours) and memory (1 hour)
+      await storageService.saveToCache(cacheKey, weatherData, this.CACHE_DURATION_HOURS, 'weather');
       this.cache.set(cacheKey, {
         data: weatherData,
         timestamp: Date.now()
@@ -125,14 +132,19 @@ export class WeatherService {
         timezone: 'auto'
       });
 
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error(`Weather API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-
+      const data = await this.fetchWithRetry(url) as {
+        current?: {
+          temperature_2m?: number;
+          relative_humidity_2m?: number;
+          precipitation?: number;
+          weather_code?: number;
+          wind_speed_10m?: number;
+        };
+        daily?: {
+          temperature_2m_max?: number[];
+          temperature_2m_min?: number[];
+        };
+      };
       return this.parseCurrentWeatherResponse(data);
 
     } catch (error) {
@@ -284,6 +296,52 @@ export class WeatherService {
   }
 
   /**
+   * Fetch with retry logic and proper error handling
+   */
+  private static async fetchWithRetry(url: string): Promise<unknown> {
+    let lastError: Error = new Error('No attempts made');
+
+    for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
+      try {
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error(`Weather API error: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        
+        // Validate that we got the expected data structure
+        if (!data || typeof data !== 'object') {
+          throw new Error('Invalid response format from weather API');
+        }
+
+        return data;
+
+      } catch (error) {
+        lastError = error as Error;
+        console.warn(`Weather API attempt ${attempt} failed:`, error);
+
+        // Don't retry on client errors (4xx)
+        if (error instanceof Error && error.message.includes('4')) {
+          throw error;
+        }
+
+        // Wait before retrying (exponential backoff)
+        if (attempt < this.MAX_RETRIES) {
+          await new Promise(resolve => 
+            setTimeout(resolve, this.RETRY_DELAY_MS * attempt)
+          );
+        }
+      }
+    }
+
+    throw lastError;
+  }
+
+  
+
+  /**
    * Clear the weather cache
    */
   static clearCache(): void {
@@ -293,9 +351,10 @@ export class WeatherService {
   /**
    * Get cache statistics
    */
-  static getCacheStats(): { size: number } {
+  static getCacheStats(): { size: number; memorySize: number } {
     return {
-      size: this.cache.size
+      size: this.cache.size,
+      memorySize: this.cache.size
     };
   }
 }
