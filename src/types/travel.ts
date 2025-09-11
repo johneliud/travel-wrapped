@@ -150,6 +150,42 @@ export interface EnhancedTravelStats extends TravelStats {
     visits: number;
     totalDays: number;
   }>;
+  // Advanced statistics (Section 2.4)
+  busiestTravelPeriod?: {
+    month: string; // e.g., "January"
+    monthNumber: number; // 1-12
+    tripsCount: number;
+    totalDistance: number;
+    year?: number; // If specific to a year
+  };
+  busiestSeason?: {
+    season: 'Spring' | 'Summer' | 'Autumn' | 'Winter';
+    tripsCount: number;
+    totalDistance: number;
+    months: string[]; // e.g., ["March", "April", "May"]
+  };
+  longestTravelStreak?: {
+    startDate: string;
+    endDate: string;
+    daysCount: number;
+    tripsCount: number;
+    countriesVisited: number;
+    totalDistance: number;
+  };
+  timezonesCrossed?: number;
+  timezoneTransitions?: Array<{
+    fromTimezone: string;
+    toTimezone: string;
+    location: string;
+    date: string;
+  }>;
+  transportModeBreakdown?: Array<{
+    mode: string; // e.g., "Flying", "Driving", "Walking"
+    distanceKm: number;
+    percentage: number;
+    tripsCount: number;
+    averageDistance: number;
+  }>;
 }
 
 export interface ProcessingResult {
