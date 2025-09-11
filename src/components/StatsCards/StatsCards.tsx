@@ -286,7 +286,38 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, isEnhanced = fals
         </div>
       )}
 
-      
+      {/* Top Destinations (Enhanced Stats) */}
+      {isEnhanced && 'topDestinations' in stats && stats.topDestinations && stats.topDestinations.length > 0 && (
+        <div className="bg-gradient-to-br from-amber-50 to-orange-100 rounded-lg p-6 border border-amber-200">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-amber-800 flex items-center">
+              <span className="text-2xl mr-2">🏙️</span>
+              Top Destinations
+            </h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {stats.topDestinations.slice(0, 6).map((dest, index) => (
+              <div 
+                key={`${dest.city}-${dest.country}`}
+                className="bg-white/60 rounded-lg p-4 border border-amber-100 hover:bg-white hover:shadow-md transition-all"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-2xl">
+                    {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '📍'}
+                  </div>
+                  <div className="text-xs text-amber-600">#{index + 1}</div>
+                </div>
+                <div className="font-semibold text-amber-800 mb-1">{dest.city}</div>
+                <div className="text-sm text-amber-700">{dest.country}</div>
+                <div className="text-xs text-amber-600 mt-2">
+                  {dest.visits} visit{dest.visits > 1 ? 's' : ''} • {dest.totalDays} day{dest.totalDays > 1 ? 's' : ''}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Loading state for facts */}
       {factsLoading && (
