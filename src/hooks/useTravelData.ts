@@ -63,6 +63,15 @@ export const useTravelData = (): UseTravelDataReturn => {
     updatedAt: stored.updatedAt
   }), []);
 
+  const refreshStoredDataList = useCallback(async () => {
+    try {
+      const stored = await storageService.getAllTravelData();
+      setAllStoredData(stored);
+    } catch (err) {
+      console.error('Failed to refresh stored data list:', err);
+    }
+  }, []);
+
   const saveTravelData = useCallback(async (data: Omit<AppTravelData, 'storageId' | 'createdAt' | 'updatedAt'>): Promise<string> => {
     try {
       setIsLoading(true);
@@ -102,7 +111,7 @@ export const useTravelData = (): UseTravelDataReturn => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [refreshStoredDataList]);
 
   const loadTravelData = useCallback(async (id?: string) => {
     try {
@@ -168,7 +177,7 @@ export const useTravelData = (): UseTravelDataReturn => {
     } finally {
       setIsLoading(false);
     }
-  }, [travelData]);
+  }, [travelData, refreshStoredDataList]);
 
   const deleteTravelData = useCallback(async (id: string) => {
     try {
@@ -191,16 +200,7 @@ export const useTravelData = (): UseTravelDataReturn => {
     } finally {
       setIsLoading(false);
     }
-  }, [travelData]);
-
-  const refreshStoredDataList = useCallback(async () => {
-    try {
-      const stored = await storageService.getAllTravelData();
-      setAllStoredData(stored);
-    } catch (err) {
-      console.error('Failed to refresh stored data list:', err);
-    }
-  }, []);
+  }, [travelData, refreshStoredDataList]);
 
   const clearCurrentData = useCallback(() => {
     setTravelData(null);
