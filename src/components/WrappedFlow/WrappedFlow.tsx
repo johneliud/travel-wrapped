@@ -483,7 +483,101 @@ export const WrappedFlow: React.FC<WrappedFlowProps> = ({
     setIsAutoAdvancing(!isAutoAdvancing);
   };
 
-  
+  return (
+    <div 
+      className="fixed inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 z-50 flex flex-col"
+      onMouseEnter={() => setShowControls(true)}
+      onMouseLeave={() => setShowControls(false)}
+    >
+      {/* Progress Bar */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-black/10 z-10">
+        <motion.div 
+          className="h-full bg-gradient-to-r from-blue-600 to-purple-600"
+          initial={{ width: 0 }}
+          animate={{ width: `${((currentSlideIndex + 1) / slides.length) * 100}%` }}
+          transition={{ duration: 0.5 }}
+        />
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="max-w-4xl w-full">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentSlide.id}
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ duration: 0.5 }}
+              className="min-h-[400px] flex items-center justify-center"
+            >
+              {currentSlide.component}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Controls */}
+      <motion.div 
+        className="absolute bottom-8 left-0 right-0 flex justify-center items-center gap-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: showControls ? 1 : 0.3 }}
+        transition={{ duration: 0.3 }}
+      >
+        <button
+          onClick={prevSlide}
+          disabled={currentSlideIndex === 0}
+          className="p-2 rounded-full bg-white/20 backdrop-blur-sm text-gray-700 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        >
+          ←
+        </button>
+
+        <div className="flex gap-2">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`w-3 h-3 rounded-full transition-all ${
+                index === currentSlideIndex 
+                  ? 'bg-blue-600 scale-125' 
+                  : 'bg-white/50 hover:bg-white/70'
+              }`}
+            />
+          ))}
+        </div>
+
+        <button
+          onClick={nextSlide}
+          disabled={currentSlideIndex === slides.length - 1}
+          className="p-2 rounded-full bg-white/20 backdrop-blur-sm text-gray-700 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        >
+          →
+        </button>
+
+        <button
+          onClick={toggleAutoAdvance}
+          className={`ml-4 px-3 py-1 rounded-full text-sm font-medium transition-all ${
+            isAutoAdvancing 
+              ? 'bg-blue-600 text-white' 
+              : 'bg-white/20 backdrop-blur-sm text-gray-700 hover:bg-white/30'
+          }`}
+        >
+          {isAutoAdvancing ? 'Pause' : 'Play'}
+        </button>
+      </motion.div>
+
+      {/* Skip Button */}
+      <motion.button
+        className="absolute top-8 right-8 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg text-gray-700 hover:bg-white/30 transition-all"
+        onClick={onComplete}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: showControls ? 1 : 0.3 }}
+        transition={{ duration: 0.3 }}
+      >
+        Skip
+      </motion.button>
+    </div>
+  );
 };
 
 export default WrappedFlow;
