@@ -124,6 +124,54 @@ export const WrappedFlow: React.FC<WrappedFlowProps> = ({
           </motion.div>
         )
       },
+      {
+        id: 'countries',
+        title: 'Countries Explored',
+        autoAdvanceDelay: 4000,
+        component: (
+          <motion.div className="text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <div className="text-5xl mb-6">🌍</div>
+              <motion.h2 
+                className="text-3xl font-bold text-green-600 mb-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                You explored
+              </motion.h2>
+              <motion.div 
+                className="text-6xl font-bold text-green-700 mb-4"
+                initial={{ opacity: 0, x: -100 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6, type: "spring", bounce: 0.4 }}
+              >
+                {stats.uniqueCountries}
+              </motion.div>
+              <motion.p 
+                className="text-2xl text-green-600"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.9 }}
+              >
+                {stats.uniqueCountries === 1 ? 'country' : 'countries'}
+              </motion.p>
+              <motion.p 
+                className="text-lg text-gray-500 mt-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.2 }}
+              >
+                {(stats.uniqueCountries / 195 * 100).toFixed(1)}% of all countries in the world
+              </motion.p>
+            </motion.div>
+          </motion.div>
+        )
+      },
       
 };
 
