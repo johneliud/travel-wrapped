@@ -390,7 +390,61 @@ export const WrappedFlow: React.FC<WrappedFlowProps> = ({
       });
     }
 
-    
+    // Final slide
+    slides.push({
+      id: 'outro',
+      title: 'The End',
+      component: (
+        <motion.div className="text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <motion.div 
+              className="text-6xl mb-6"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.3, type: "spring", bounce: 0.5 }}
+            >
+              🎉
+            </motion.div>
+            <motion.h2 
+              className="text-4xl font-bold text-gray-800 mb-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+            >
+              That's your story!
+            </motion.h2>
+            <motion.p 
+              className="text-xl text-gray-600 mb-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.9 }}
+            >
+              {stats.totalTrips} trips • {stats.totalDistanceKm.toLocaleString()} km • {stats.uniqueCountries} countries
+            </motion.p>
+            <motion.button
+              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-shadow"
+              onClick={onComplete}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 1.2, type: "spring" }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Explore More Details
+            </motion.button>
+          </motion.div>
+        </motion.div>
+      )
+    });
+
+    return slides;
+  }, [stats, isEnhanced, unlockedAchievements, travelLevel, personality, onComplete]);
+
+  
 };
 
 export default WrappedFlow;
