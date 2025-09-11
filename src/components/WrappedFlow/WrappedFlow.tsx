@@ -222,7 +222,56 @@ export const WrappedFlow: React.FC<WrappedFlowProps> = ({
           </motion.div>
         )
       },
-      
+      {
+        id: 'personality',
+        title: 'Travel Personality',
+        autoAdvanceDelay: 4000,
+        component: (
+          <motion.div className="text-center">
+            <motion.div
+              initial={{ opacity: 0, rotateY: -90 }}
+              animate={{ opacity: 1, rotateY: 0 }}
+              transition={{ duration: 1, ease: "easeOut" }}
+            >
+              <motion.div 
+                className="text-6xl mb-6"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.5, type: "spring", bounce: 0.6 }}
+              >
+                {personality.icon}
+              </motion.div>
+              <motion.h2 
+                className="text-3xl font-bold text-orange-600 mb-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+              >
+                You are a
+              </motion.h2>
+              <motion.h3 
+                className="text-4xl font-bold text-orange-700 mb-6"
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1.1, type: "spring" }}
+              >
+                {personality.title}
+              </motion.h3>
+              <motion.p 
+                className="text-lg text-gray-600 max-w-md mx-auto"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.4 }}
+              >
+                {personality.description}
+              </motion.p>
+            </motion.div>
+          </motion.div>
+        )
+      }
+    ];
+
+    
 };
 
 export default WrappedFlow;
