@@ -193,3 +193,69 @@ export class AppErrorHandler {
   }
 }
 
+/**
+ * Circuit breaker for API services to prevent cascading failures
+ */
+export class ApiCircuitBreaker {
+  private failures = 0;
+  private lastFailTime = 0;
+  private state: 'CLOSED' | 'OPEN' | 'HALF_OPEN' = 'CLOSED';
+  private readonly serviceName: string;
+  private readonly maxFailures: number;
+  private readonly resetTimeoutMs: number;
+  
+  constructor(
+    serviceName: string,
+    maxFailures: number = 5,
+    resetTimeoutMs: number = 60000 // 1 minute
+  ) {
+    this.serviceName = serviceName;
+    this.maxFailures = maxFailures;
+    this.resetTimeoutMs = resetTimeoutMs;
+  }
+
+  async execute<T>(operation: () => Promise<T>): Promise<T> {
+    if (this.state === 'OPEN') {
+      if (Date.now() - this.lastFailTime > this.resetTimeoutMs) {
+        this.state = 'HALF_OPEN';
+      } else {
+        throw new Error(`${this.serviceName} circuit breaker is OPEN`);
+      }
+    }
+
+    try {
+      const result = await operation();
+      
+      if (this.state === 'HALF_OPEN') {
+        this.reset();
+      }
+      
+      return result;
+      
+    } catch (error) {
+      this.recordFailure();
+      throw error;
+    }
+  }
+
+  private recordFailure(): void {
+    this.failures++;
+    this.lastFailTime = Date.now();
+    
+    if (this.failures >= this.maxFailures) {
+      this.state = 'OPEN';
+      console.warn(`${this.serviceName} circuit breaker opened after ${this.failures} failures`);
+    }
+  }
+
+  private reset(): void {
+    this.failures = 0;
+    this.state = 'CLOSED';
+    console.info(`${this.serviceName} circuit breaker reset`);
+  }
+
+  getState(): string {
+    return this.state;
+  }
+}
+
