@@ -76,9 +76,55 @@ export const WrappedFlow: React.FC<WrappedFlowProps> = ({
           </motion.div>
         )
       },
+      {
+        id: 'total-distance',
+        title: 'Distance Traveled',
+        autoAdvanceDelay: 4000,
+        component: (
+          <motion.div className="text-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, type: "spring" }}
+            >
+              <div className="text-5xl mb-6">🛣️</div>
+              <motion.h2 
+                className="text-3xl font-bold text-blue-600 mb-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                You traveled
+              </motion.h2>
+              <motion.div 
+                className="text-6xl font-bold text-blue-700 mb-4"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.8, type: "spring", bounce: 0.3 }}
+              >
+                {stats.totalDistanceKm.toLocaleString()}
+              </motion.div>
+              <motion.p 
+                className="text-2xl text-blue-600"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.2 }}
+              >
+                kilometers
+              </motion.p>
+              <motion.p 
+                className="text-lg text-gray-500 mt-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.5 }}
+              >
+                That's {(stats.totalDistanceKm / 40075 * 100).toFixed(1)}% around Earth!
+              </motion.p>
+            </motion.div>
+          </motion.div>
+        )
+      },
       
-
-  
 };
 
 export default WrappedFlow;
