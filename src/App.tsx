@@ -2,12 +2,13 @@ import { useState, useCallback, useEffect } from 'react'
 import { DataInput } from './components/DataInput'
 import { MapView } from './components/MapView'
 import { StatsCards } from './components/StatsCards'
+import { WrappedFlow } from './components/WrappedFlow'
 import { useTravelData, useProcessingResult } from './hooks/useTravelData'
 import { useStorageQuota } from './hooks/useStorageQuota'
 import type { ProcessingResult, EnhancedProcessingResult } from './types/travel'
 
 function App() {
-  const [currentView, setCurrentView] = useState<'input' | 'results' | 'visualization'>('input')
+  const [currentView, setCurrentView] = useState<'input' | 'results' | 'visualization' | 'wrapped'>('input')
   const { travelData, isLoading, error, clearCurrentData } = useTravelData()
   const { saveProcessingResult } = useProcessingResult()
   const { quotaInfo, isLowStorage, isCriticalStorage } = useStorageQuota(60000) // Check every minute
@@ -23,6 +24,14 @@ function App() {
 
   const handleContinueToVisualization = useCallback(() => {
     setCurrentView('visualization')
+  }, [])
+
+  const handleViewWrapped = useCallback(() => {
+    setCurrentView('wrapped')
+  }, [])
+
+  const handleCompleteWrapped = useCallback(() => {
+    setCurrentView('results')
   }, [])
 
   const handleBackToInput = useCallback(() => {
@@ -197,16 +206,22 @@ function App() {
 
           <div className="flex flex-wrap gap-4 mt-6">
             <button
-              onClick={handleBackToInput}
-              className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
+              onClick={handleViewWrapped}
+              className="bg-gradient-to-r from-pink-500 to-rose-500 text-white px-8 py-3 rounded-lg hover:from-pink-600 hover:to-rose-600 transition-colors font-bold shadow-lg text-lg"
             >
-              Process Another File
+              View Your Wrapped Story
             </button>
             <button
               onClick={handleContinueToVisualization}
               className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-colors font-medium shadow-lg"
             >
               Continue to Visualization
+            </button>
+            <button
+              onClick={handleBackToInput}
+              className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
+            >
+              Process Another File
             </button>
             {enhanced && (
               <span className="text-xs text-gray-500 self-center">
@@ -379,6 +394,23 @@ function App() {
       )}
       {currentView === 'results' && renderResults()}
       {currentView === 'visualization' && renderVisualization()}
+      {currentView === 'wrapped' && (() => {
+        const displayData = getDisplayData();
+        if (!displayData) return null;
+
+        const enhanced = isEnhancedResult(displayData);
+        const stats = enhanced ? displayData.enhancedStats : displayData.stats;
+        const trips = enhanced ? displayData.enhancedTrips : displayData.trips;
+
+        return (
+          <WrappedFlow
+            trips={trips}
+            stats={stats}
+            isEnhanced={enhanced}
+            onComplete={handleCompleteWrapped}
+          />
+        );
+      })()}
     </div>
   )
 }
