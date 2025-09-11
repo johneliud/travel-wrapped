@@ -367,6 +367,36 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, isEnhanced = fals
             </div>
           )}
 
+          {/* Transport & Distance */}
+          {('transportModeBreakdown' in stats && stats.transportModeBreakdown && stats.transportModeBreakdown.length > 0) && (
+            <div className="bg-gradient-to-br from-rose-50 to-pink-100 rounded-lg p-6 border border-rose-200">
+              <h3 className="text-lg font-semibold text-rose-800 mb-4 flex items-center">
+                <span className="text-2xl mr-2">🚀</span>
+                Transport Mode Breakdown
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {stats.transportModeBreakdown.slice(0, 6).map((mode) => (
+                  <div 
+                    key={mode.mode}
+                    className="bg-white/60 rounded-lg p-4 border border-rose-100"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-2xl">
+                        {mode.mode === 'Flying' ? '✈️' : 
+                         mode.mode === 'Driving' ? '🚗' : 
+                         mode.mode === 'Walking' ? '🚶' : '🚊'}
+                      </div>
+                      <div className="text-xs text-rose-600">{mode.percentage}%</div>
+                    </div>
+                    <div className="font-semibold text-rose-800 mb-1">{mode.mode}</div>
+                    <div className="text-sm text-rose-700 mb-1">{mode.distanceKm.toLocaleString()} km</div>
+                    <div className="text-xs text-rose-600">{mode.tripsCount} trips • avg {mode.averageDistance.toLocaleString()} km</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           
         </>
       )}
