@@ -444,6 +444,45 @@ export const WrappedFlow: React.FC<WrappedFlowProps> = ({
     return slides;
   }, [stats, isEnhanced, unlockedAchievements, travelLevel, personality, onComplete]);
 
+  const slides = createSlides();
+  const currentSlide = slides[currentSlideIndex];
+
+  // Auto-advance logic
+  useEffect(() => {
+    if (!isAutoAdvancing || !currentSlide.autoAdvanceDelay) return;
+
+    const timer = setTimeout(() => {
+      if (currentSlideIndex < slides.length - 1) {
+        setCurrentSlideIndex(prev => prev + 1);
+      } else {
+        setIsAutoAdvancing(false);
+      }
+    }, currentSlide.autoAdvanceDelay);
+
+    return () => clearTimeout(timer);
+  }, [currentSlideIndex, isAutoAdvancing, currentSlide.autoAdvanceDelay, slides.length]);
+
+  const nextSlide = () => {
+    if (currentSlideIndex < slides.length - 1) {
+      setCurrentSlideIndex(prev => prev + 1);
+    }
+  };
+
+  const prevSlide = () => {
+    if (currentSlideIndex > 0) {
+      setCurrentSlideIndex(prev => prev - 1);
+    }
+  };
+
+  const goToSlide = (index: number) => {
+    setCurrentSlideIndex(index);
+    setIsAutoAdvancing(false);
+  };
+
+  const toggleAutoAdvance = () => {
+    setIsAutoAdvancing(!isAutoAdvancing);
+  };
+
   
 };
 
