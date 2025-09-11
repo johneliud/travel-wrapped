@@ -319,6 +319,128 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, isEnhanced = fals
         </div>
       )}
 
+      {/* Advanced Statistics (Section 2.4) */}
+      {isEnhanced && (
+        <>
+          {/* Travel Patterns */}
+          {('busiestTravelPeriod' in stats || 'busiestSeason' in stats || 'longestTravelStreak' in stats) && (
+            <div className="bg-gradient-to-br from-teal-50 to-cyan-100 rounded-lg p-6 border border-teal-200">
+              <h3 className="text-lg font-semibold text-teal-800 mb-4 flex items-center">
+                <span className="text-2xl mr-2">📊</span>
+                Travel Patterns
+              </h3>
+              <div className="grid md:grid-cols-3 gap-4">
+                {stats.busiestTravelPeriod && (
+                  <div className="bg-white/60 rounded-lg p-4 border border-teal-100">
+                    <div className="text-2xl mb-2">🗓️</div>
+                    <h4 className="font-semibold text-teal-800 mb-1">Busiest Month</h4>
+                    <p className="text-lg font-bold text-teal-700">{stats.busiestTravelPeriod.month}</p>
+                    <p className="text-sm text-teal-600">{stats.busiestTravelPeriod.tripsCount} trips</p>
+                    <p className="text-xs text-teal-500">{stats.busiestTravelPeriod.totalDistance.toLocaleString()} km traveled</p>
+                  </div>
+                )}
+                
+                {stats.busiestSeason && (
+                  <div className="bg-white/60 rounded-lg p-4 border border-teal-100">
+                    <div className="text-2xl mb-2">
+                      {stats.busiestSeason.season === 'Spring' ? '🌸' : 
+                       stats.busiestSeason.season === 'Summer' ? '☀️' : 
+                       stats.busiestSeason.season === 'Autumn' ? '🍂' : '❄️'}
+                    </div>
+                    <h4 className="font-semibold text-teal-800 mb-1">Busiest Season</h4>
+                    <p className="text-lg font-bold text-teal-700">{stats.busiestSeason.season}</p>
+                    <p className="text-sm text-teal-600">{stats.busiestSeason.tripsCount} trips</p>
+                    <p className="text-xs text-teal-500">{stats.busiestSeason.totalDistance.toLocaleString()} km traveled</p>
+                  </div>
+                )}
+
+                {stats.longestTravelStreak && (
+                  <div className="bg-white/60 rounded-lg p-4 border border-teal-100">
+                    <div className="text-2xl mb-2">🔥</div>
+                    <h4 className="font-semibold text-teal-800 mb-1">Longest Streak</h4>
+                    <p className="text-lg font-bold text-teal-700">{stats.longestTravelStreak.daysCount} days</p>
+                    <p className="text-sm text-teal-600">{stats.longestTravelStreak.tripsCount} trips</p>
+                    <p className="text-xs text-teal-500">{stats.longestTravelStreak.countriesVisited} countries visited</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Transport & Distance */}
+          {('transportModeBreakdown' in stats && stats.transportModeBreakdown && stats.transportModeBreakdown.length > 0) && (
+            <div className="bg-gradient-to-br from-rose-50 to-pink-100 rounded-lg p-6 border border-rose-200">
+              <h3 className="text-lg font-semibold text-rose-800 mb-4 flex items-center">
+                <span className="text-2xl mr-2">🚀</span>
+                Transport Mode Breakdown
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {stats.transportModeBreakdown.slice(0, 6).map((mode) => (
+                  <div 
+                    key={mode.mode}
+                    className="bg-white/60 rounded-lg p-4 border border-rose-100"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-2xl">
+                        {mode.mode === 'Flying' ? '✈️' : 
+                         mode.mode === 'Driving' ? '🚗' : 
+                         mode.mode === 'Walking' ? '🚶' : '🚊'}
+                      </div>
+                      <div className="text-xs text-rose-600">{mode.percentage}%</div>
+                    </div>
+                    <div className="font-semibold text-rose-800 mb-1">{mode.mode}</div>
+                    <div className="text-sm text-rose-700 mb-1">{mode.distanceKm.toLocaleString()} km</div>
+                    <div className="text-xs text-rose-600">{mode.tripsCount} trips • avg {mode.averageDistance.toLocaleString()} km</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Timezone Adventures */}
+          {('timezonesCrossed' in stats && stats.timezonesCrossed !== undefined && stats.timezonesCrossed > 0) && (
+            <div className="bg-gradient-to-br from-indigo-50 to-purple-100 rounded-lg p-6 border border-indigo-200">
+              <h3 className="text-lg font-semibold text-indigo-800 mb-4 flex items-center">
+                <span className="text-2xl mr-2">🌐</span>
+                Timezone Adventures
+              </h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="bg-white/60 rounded-lg p-4 border border-indigo-100">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-indigo-700 mb-1">{stats.timezonesCrossed}</div>
+                    <div className="text-sm text-indigo-600">Timezone Crossings</div>
+                    <div className="text-xs text-indigo-500 mt-1">Around the world adventure!</div>
+                  </div>
+                </div>
+                
+                {('timezoneTransitions' in stats && stats.timezoneTransitions && stats.timezoneTransitions.length > 0) && (
+                  <div className="bg-white/60 rounded-lg p-4 border border-indigo-100">
+                    <h4 className="font-semibold text-indigo-800 mb-3">Recent Transitions</h4>
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {stats.timezoneTransitions.slice(0, 3).map((transition, index) => (
+                        <div key={index} className="text-xs">
+                          <div className="font-medium text-indigo-700">
+                            {transition.fromTimezone} → {transition.toTimezone}
+                          </div>
+                          <div className="text-indigo-500">
+                            {transition.location} • {transition.date}
+                          </div>
+                        </div>
+                      ))}
+                      {stats.timezoneTransitions.length > 3 && (
+                        <div className="text-xs text-indigo-400 mt-2">
+                          +{stats.timezoneTransitions.length - 3} more transitions
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
       {/* Loading state for facts */}
       {factsLoading && (
         <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
