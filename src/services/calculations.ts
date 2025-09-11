@@ -399,6 +399,22 @@ export class TravelCalculations {
     };
   }
 
+  /**
+   * Calculate advanced travel statistics
+   */
+  private static calculateAdvancedStatistics(trips: EnhancedTrip[]): Partial<EnhancedTravelStatsType> {
+    if (trips.length === 0) return {};
+
+    return {
+      busiestTravelPeriod: this.calculateBusiestTravelPeriod(trips),
+      busiestSeason: this.calculateBusiestSeason(trips),
+      longestTravelStreak: this.calculateLongestTravelStreak(trips),
+      timezonesCrossed: this.calculateTimezoneCrossings(trips).count,
+      timezoneTransitions: this.calculateTimezoneCrossings(trips).transitions,
+      transportModeBreakdown: this.calculateTransportModeBreakdown(trips)
+    };
+  }
+
   
 
   /**
