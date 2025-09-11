@@ -334,6 +334,62 @@ export const WrappedFlow: React.FC<WrappedFlowProps> = ({
       });
     }
 
+    // Add enhanced weather slide if available
+    if (isEnhanced && 'hottestTrip' in stats && (stats.hottestTrip || stats.coldestTrip)) {
+      slides.push({
+        id: 'weather',
+        title: 'Weather Adventures',
+        autoAdvanceDelay: 4000,
+        component: (
+          <motion.div className="text-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8 }}
+            >
+              <div className="text-5xl mb-6">🌡️</div>
+              <motion.h2 
+                className="text-3xl font-bold text-red-600 mb-8"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                Your Weather Story
+              </motion.h2>
+              <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+                {stats.hottestTrip && (
+                  <motion.div 
+                    className="bg-gradient-to-br from-red-100 to-orange-100 rounded-lg p-6"
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.6 }}
+                  >
+                    <div className="text-4xl mb-4">🔥</div>
+                    <h3 className="text-xl font-bold text-red-700">Hottest Adventure</h3>
+                    <p className="text-3xl font-bold text-red-600 mt-2">{stats.hottestTrip.temperature}°C</p>
+                    <p className="text-red-600 mt-1">{stats.hottestTrip.location}</p>
+                  </motion.div>
+                )}
+                {stats.coldestTrip && (
+                  <motion.div 
+                    className="bg-gradient-to-br from-blue-100 to-cyan-100 rounded-lg p-6"
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.9 }}
+                  >
+                    <div className="text-4xl mb-4">❄️</div>
+                    <h3 className="text-xl font-bold text-blue-700">Coldest Adventure</h3>
+                    <p className="text-3xl font-bold text-blue-600 mt-2">{stats.coldestTrip.temperature}°C</p>
+                    <p className="text-blue-600 mt-1">{stats.coldestTrip.location}</p>
+                  </motion.div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )
+      });
+    }
+
     
 };
 
