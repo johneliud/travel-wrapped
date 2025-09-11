@@ -319,6 +319,58 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, isEnhanced = fals
         </div>
       )}
 
+      {/* Advanced Statistics (Section 2.4) */}
+      {isEnhanced && (
+        <>
+          {/* Travel Patterns */}
+          {('busiestTravelPeriod' in stats || 'busiestSeason' in stats || 'longestTravelStreak' in stats) && (
+            <div className="bg-gradient-to-br from-teal-50 to-cyan-100 rounded-lg p-6 border border-teal-200">
+              <h3 className="text-lg font-semibold text-teal-800 mb-4 flex items-center">
+                <span className="text-2xl mr-2">📊</span>
+                Travel Patterns
+              </h3>
+              <div className="grid md:grid-cols-3 gap-4">
+                {stats.busiestTravelPeriod && (
+                  <div className="bg-white/60 rounded-lg p-4 border border-teal-100">
+                    <div className="text-2xl mb-2">🗓️</div>
+                    <h4 className="font-semibold text-teal-800 mb-1">Busiest Month</h4>
+                    <p className="text-lg font-bold text-teal-700">{stats.busiestTravelPeriod.month}</p>
+                    <p className="text-sm text-teal-600">{stats.busiestTravelPeriod.tripsCount} trips</p>
+                    <p className="text-xs text-teal-500">{stats.busiestTravelPeriod.totalDistance.toLocaleString()} km traveled</p>
+                  </div>
+                )}
+                
+                {stats.busiestSeason && (
+                  <div className="bg-white/60 rounded-lg p-4 border border-teal-100">
+                    <div className="text-2xl mb-2">
+                      {stats.busiestSeason.season === 'Spring' ? '🌸' : 
+                       stats.busiestSeason.season === 'Summer' ? '☀️' : 
+                       stats.busiestSeason.season === 'Autumn' ? '🍂' : '❄️'}
+                    </div>
+                    <h4 className="font-semibold text-teal-800 mb-1">Busiest Season</h4>
+                    <p className="text-lg font-bold text-teal-700">{stats.busiestSeason.season}</p>
+                    <p className="text-sm text-teal-600">{stats.busiestSeason.tripsCount} trips</p>
+                    <p className="text-xs text-teal-500">{stats.busiestSeason.totalDistance.toLocaleString()} km traveled</p>
+                  </div>
+                )}
+
+                {stats.longestTravelStreak && (
+                  <div className="bg-white/60 rounded-lg p-4 border border-teal-100">
+                    <div className="text-2xl mb-2">🔥</div>
+                    <h4 className="font-semibold text-teal-800 mb-1">Longest Streak</h4>
+                    <p className="text-lg font-bold text-teal-700">{stats.longestTravelStreak.daysCount} days</p>
+                    <p className="text-sm text-teal-600">{stats.longestTravelStreak.tripsCount} trips</p>
+                    <p className="text-xs text-teal-500">{stats.longestTravelStreak.countriesVisited} countries visited</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          
+        </>
+      )}
+
       {/* Loading state for facts */}
       {factsLoading && (
         <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
