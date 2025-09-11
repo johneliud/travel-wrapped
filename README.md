@@ -128,13 +128,6 @@ npm run lint
 
 ## Current Status
 
-### Phase 1.2: Data Input System ✅ Complete
-### Phase 1.3: Core Statistics Engine ✅ Complete  
-### Phase 1.4: Local Storage System ✅ Complete
-### Phase 1.5: Basic Visualization ✅ Complete
-### Phase 1.6: Stats Display ✅ Complete
-### Phase 2.1: Wrapped Flow Animation ✅ Complete
-
 **Latest Features Added (Phase 2.1):**
 - **Spotify-Style Storytelling** - Animated story flow that reveals travel insights dramatically
 - **Framer Motion Integration** - Smooth, professional animations with spring physics
@@ -143,29 +136,6 @@ npm run lint
 - **Dynamic Story Generation** - Slides adapt based on your data (achievements, weather, etc.)
 - **Cinematic Reveals** - Smooth fade-ins, scale animations, and staggered content reveals
 - **Mobile-Optimized Controls** - Touch-friendly navigation with hover states for desktop
-
-**Previous Features (Phase 1.6):**
-- **Gamified Stats Cards** - Beautiful, interactive stat displays with hover effects
-- **Achievement System** - 20+ unlockable achievements based on travel behavior
-- **Travel Levels** - Progressive level system from "Local Explorer" to "Legendary Nomad"
-- **Travel Personality** - Dynamic personality types like "Globe Trotter" and "Weather Warrior"
-- **Numbers API Integration** - Fun facts about your travel numbers in real-time
-- **Distance Equivalents** - Compare your distance to Earth's circumference and other fun metrics
-- **Progressive UI** - Animated progress bars, unlock celebrations, and visual feedback
-
-**Previous Features:**
-- **Interactive Maps** - React Leaflet integration with OpenStreetMap tiles
-- **Location Markers** - Clickable pins showing trip details and weather data
-- **Route Visualization** - Polylines connecting travel destinations
-- **Map Controls** - Zoom, pan, and auto-fit to show all locations
-- **Enhanced Popups** - Rich location information with place names and visit counts
-- **Responsive Design** - Mobile-optimized map interface
-- **Data Persistence** - Travel data automatically saved between sessions
-- **Storage Management** - IndexedDB-based storage with quota monitoring
-- **Multiple Datasets** - Save and manage multiple travel datasets
-- **Data Export/Import** - Backup and restore functionality
-- **Storage Warnings** - Alerts when storage space is running low
-- **Automatic Recovery** - Resumes from last session on page reload
 
 ### Coming Next: Phase 2.2 - Free API Integration  
 - [ ] Integrate Nominatim geocoding for manual entries
