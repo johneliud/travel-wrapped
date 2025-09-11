@@ -397,7 +397,47 @@ export const StatsCards: React.FC<StatsCardsProps> = ({ stats, isEnhanced = fals
             </div>
           )}
 
-          
+          {/* Timezone Adventures */}
+          {('timezonesCrossed' in stats && stats.timezonesCrossed !== undefined && stats.timezonesCrossed > 0) && (
+            <div className="bg-gradient-to-br from-indigo-50 to-purple-100 rounded-lg p-6 border border-indigo-200">
+              <h3 className="text-lg font-semibold text-indigo-800 mb-4 flex items-center">
+                <span className="text-2xl mr-2">🌐</span>
+                Timezone Adventures
+              </h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="bg-white/60 rounded-lg p-4 border border-indigo-100">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-indigo-700 mb-1">{stats.timezonesCrossed}</div>
+                    <div className="text-sm text-indigo-600">Timezone Crossings</div>
+                    <div className="text-xs text-indigo-500 mt-1">Around the world adventure!</div>
+                  </div>
+                </div>
+                
+                {('timezoneTransitions' in stats && stats.timezoneTransitions && stats.timezoneTransitions.length > 0) && (
+                  <div className="bg-white/60 rounded-lg p-4 border border-indigo-100">
+                    <h4 className="font-semibold text-indigo-800 mb-3">Recent Transitions</h4>
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {stats.timezoneTransitions.slice(0, 3).map((transition, index) => (
+                        <div key={index} className="text-xs">
+                          <div className="font-medium text-indigo-700">
+                            {transition.fromTimezone} → {transition.toTimezone}
+                          </div>
+                          <div className="text-indigo-500">
+                            {transition.location} • {transition.date}
+                          </div>
+                        </div>
+                      ))}
+                      {stats.timezoneTransitions.length > 3 && (
+                        <div className="text-xs text-indigo-400 mt-2">
+                          +{stats.timezoneTransitions.length - 3} more transitions
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </>
       )}
 
