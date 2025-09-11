@@ -339,7 +339,55 @@ export class WeatherService {
     throw lastError;
   }
 
-  
+  /**
+   * Get weather statistics for all trips
+   */
+  static async getWeatherStatistics(trips: { location: LatLng; startTime: Date }[]): Promise<{
+    hottestTemp: number;
+    coldestTemp: number;
+    averageTemp: number;
+    mostCommonWeather: string;
+  } | null> {
+    if (trips.length === 0) return null;
+
+    try {
+      const weatherPromises = trips.slice(0, 10).map(trip => 
+        this.getWeatherForDate(trip.location, trip.startTime.toISOString().split('T')[0])
+      );
+
+      const weatherResults = await Promise.allSettled(weatherPromises);
+      const validWeather = weatherResults
+        .filter((result): result is PromiseFulfilledResult<WeatherData | null> => 
+          result.status === 'fulfilled' && result.value !== null
+        )
+        .map(result => result.value!);
+
+      if (validWeather.length === 0) return null;
+
+      const temperatures = validWeather.map(w => w.temperature);
+      const weatherCodes = validWeather.map(w => w.weatherCode);
+
+      // Find most common weather code
+      const codeCount = weatherCodes.reduce((acc, code) => {
+        acc[code] = (acc[code] || 0) + 1;
+        return acc;
+      }, {} as Record<number, number>);
+      
+      const mostCommonCode = Object.entries(codeCount)
+        .sort(([, a], [, b]) => b - a)[0]?.[0];
+
+      return {
+        hottestTemp: Math.max(...temperatures),
+        coldestTemp: Math.min(...temperatures),
+        averageTemp: temperatures.reduce((sum, temp) => sum + temp, 0) / temperatures.length,
+        mostCommonWeather: this.getWeatherDescription(Number(mostCommonCode) || 0)
+      };
+
+    } catch (error) {
+      console.warn('Failed to calculate weather statistics:', error);
+      return null;
+    }
+  }
 
   /**
    * Clear the weather cache
