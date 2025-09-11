@@ -170,9 +170,135 @@ export class AppErrorHandler {
       [ErrorCode.NETWORK_ERROR]: [
         'Check your internet connection',
         'Try refreshing the page'
+      ],
+      [ErrorCode.GEOCODING_ERROR]: [
+        'Continue without enhanced location data',
+        'Try again later when the service is available'
+      ],
+      [ErrorCode.WEATHER_API_ERROR]: [
+        'Continue without weather information',
+        'Weather data will be skipped for this session'
+      ],
+      [ErrorCode.COUNTRIES_API_ERROR]: [
+        'Continue with basic country detection',
+        'Country flags may not be displayed correctly'
+      ],
+      [ErrorCode.API_RATE_LIMITED]: [
+        'Wait a few minutes and try again',
+        'Some features may be temporarily limited'
       ]
     };
 
     return recoveryActions[code] || ['Try refreshing the page and starting over'];
+  }
+}
+
+/**
+ * Circuit breaker for API services to prevent cascading failures
+ */
+export class ApiCircuitBreaker {
+  private failures = 0;
+  private lastFailTime = 0;
+  private state: 'CLOSED' | 'OPEN' | 'HALF_OPEN' = 'CLOSED';
+  private readonly serviceName: string;
+  private readonly maxFailures: number;
+  private readonly resetTimeoutMs: number;
+  
+  constructor(
+    serviceName: string,
+    maxFailures: number = 5,
+    resetTimeoutMs: number = 60000 // 1 minute
+  ) {
+    this.serviceName = serviceName;
+    this.maxFailures = maxFailures;
+    this.resetTimeoutMs = resetTimeoutMs;
+  }
+
+  async execute<T>(operation: () => Promise<T>): Promise<T> {
+    if (this.state === 'OPEN') {
+      if (Date.now() - this.lastFailTime > this.resetTimeoutMs) {
+        this.state = 'HALF_OPEN';
+      } else {
+        throw new Error(`${this.serviceName} circuit breaker is OPEN`);
+      }
+    }
+
+    try {
+      const result = await operation();
+      
+      if (this.state === 'HALF_OPEN') {
+        this.reset();
+      }
+      
+      return result;
+      
+    } catch (error) {
+      this.recordFailure();
+      throw error;
+    }
+  }
+
+  private recordFailure(): void {
+    this.failures++;
+    this.lastFailTime = Date.now();
+    
+    if (this.failures >= this.maxFailures) {
+      this.state = 'OPEN';
+      console.warn(`${this.serviceName} circuit breaker opened after ${this.failures} failures`);
+    }
+  }
+
+  private reset(): void {
+    this.failures = 0;
+    this.state = 'CLOSED';
+    console.info(`${this.serviceName} circuit breaker reset`);
+  }
+
+  getState(): string {
+    return this.state;
+  }
+}
+
+/**
+ * API fallback manager for graceful degradation
+ */
+export class ApiFallbackManager {
+  private static fallbacks = new Map<string, () => unknown>();
+
+  static registerFallback<T>(apiName: string, fallbackFunction: () => T): void {
+    this.fallbacks.set(apiName, fallbackFunction);
+  }
+
+  static async executeWithFallback<T>(
+    apiName: string,
+    primaryOperation: () => Promise<T>,
+    options?: {
+      useCircuitBreaker?: boolean;
+      customFallback?: () => T;
+    }
+  ): Promise<T> {
+    try {
+      return await primaryOperation();
+    } catch (error) {
+      console.warn(`${apiName} failed, attempting fallback:`, error);
+      
+      // Try custom fallback first
+      if (options?.customFallback) {
+        return options.customFallback();
+      }
+      
+      // Try registered fallback
+      const fallback = this.fallbacks.get(apiName);
+      if (fallback) {
+        return fallback() as T;
+      }
+      
+      // Re-throw error if no fallback available
+      throw error;
+    }
+  }
+
+  static clearFallbacks(): void {
+    this.fallbacks.clear();
   }
 }

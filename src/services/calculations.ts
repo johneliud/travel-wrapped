@@ -324,7 +324,7 @@ export class TravelCalculations {
           countryStats.set(trip.country, {
             name: trip.country,
             code: trip.countryCode || '',
-            flag: '🌍',
+            flag: trip.countryCode ? CountriesService.getFlagEmoji(trip.countryCode) : '🌍',
             count: 1
           });
         }

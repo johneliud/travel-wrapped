@@ -1,4 +1,6 @@
 import type { LatLng } from '../types/travel';
+import { ApiCircuitBreaker, ApiFallbackManager, ErrorCode, AppErrorHandler } from '../utils/errorHandling';
+import { storageService } from './storage';
 
 export interface GeocodingResult {
   lat: number;
@@ -20,6 +22,7 @@ export interface LocationInfo {
   country?: string;
   countryCode?: string;
   confidence: number;
+  coords?: LatLng;
 }
 
 export class GeocodingService {
@@ -28,70 +31,88 @@ export class GeocodingService {
   private static readonly CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
   private static cache = new Map<string, { data: LocationInfo; timestamp: number }>();
   private static lastRequestTime = 0;
+  private static circuitBreaker = new ApiCircuitBreaker('GeocodingService', 3, 30000); // 30 seconds
 
   /**
    * Reverse geocode coordinates to get location information
    */
   static async reverseGeocode(coords: LatLng): Promise<LocationInfo> {
-    const cacheKey = `${coords.latitude.toFixed(4)},${coords.longitude.toFixed(4)}`;
+    const cacheKey = `geocoding_reverse_${coords.latitude.toFixed(4)},${coords.longitude.toFixed(4)}`;
     
-    // Check cache first
+    // Check persistent cache first
+    const persistentCached = await storageService.getFromCache(cacheKey);
+    if (persistentCached) {
+      return persistentCached as LocationInfo;
+    }
+    
+    // Check memory cache
     const cached = this.cache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION_MS) {
       return cached.data;
     }
 
-    try {
-      // Implement rate limiting
-      await this.enforceRateLimit();
+    return ApiFallbackManager.executeWithFallback(
+      'geocoding-reverse',
+      async () => {
+        return this.circuitBreaker.execute(async () => {
+          await this.enforceRateLimit();
 
-      const url = `${this.BASE_URL}/reverse?` + new URLSearchParams({
-        format: 'json',
-        lat: coords.latitude.toString(),
-        lon: coords.longitude.toString(),
-        addressdetails: '1',
-        zoom: '10'
-      });
+          const url = `${this.BASE_URL}/reverse?` + new URLSearchParams({
+            format: 'json',
+            lat: coords.latitude.toString(),
+            lon: coords.longitude.toString(),
+            addressdetails: '1',
+            zoom: '10'
+          });
 
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'Travel-Wrapped/1.0 (Educational Project)'
-        }
-      });
+          const response = await fetch(url, {
+            headers: {
+              'User-Agent': 'Travel-Wrapped/1.0 (Educational Project)'
+            }
+          });
 
-      if (!response.ok) {
-        throw new Error(`Geocoding API error: ${response.status}`);
+          if (!response.ok) {
+            throw AppErrorHandler.createError(
+              ErrorCode.GEOCODING_ERROR,
+              `Geocoding API error: ${response.status}`
+            );
+          }
+
+          const data: GeocodingResult = await response.json();
+          const locationInfo = this.parseGeocodingResult(data);
+
+          // Cache in both persistent storage and memory
+          await storageService.saveToCache(cacheKey, locationInfo, 24, 'geocoding'); // 24 hours
+          this.cache.set(cacheKey, {
+            data: locationInfo,
+            timestamp: Date.now()
+          });
+
+          return locationInfo;
+        });
+      },
+      {
+        customFallback: () => ({
+          city: `${coords.latitude.toFixed(3)}, ${coords.longitude.toFixed(3)}`,
+          confidence: 0.1
+        })
       }
-
-      const data: GeocodingResult = await response.json();
-      const locationInfo = this.parseGeocodingResult(data);
-
-      // Cache the result
-      this.cache.set(cacheKey, {
-        data: locationInfo,
-        timestamp: Date.now()
-      });
-
-      return locationInfo;
-
-    } catch (error) {
-      console.warn('Reverse geocoding failed:', error);
-      
-      // Return basic result with coordinates
-      return {
-        city: `${coords.latitude.toFixed(3)}, ${coords.longitude.toFixed(3)}`,
-        confidence: 0.1
-      };
-    }
+    );
   }
 
   /**
    * Forward geocode an address to get coordinates and location info
    */
   static async forwardGeocode(address: string): Promise<LocationInfo & { coords?: LatLng }> {
-    const cacheKey = `addr:${address.toLowerCase().trim()}`;
+    const cacheKey = `geocoding_forward_${address.toLowerCase().trim()}`;
     
-    // Check cache first
+    // Check persistent cache first
+    const persistentCached = await storageService.getFromCache(cacheKey);
+    if (persistentCached) {
+      return persistentCached as LocationInfo & { coords?: LatLng };
+    }
+    
+    // Check memory cache
     const cached = this.cache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION_MS) {
       return cached.data as LocationInfo & { coords?: LatLng };
@@ -132,7 +153,8 @@ export class GeocodingService {
         }
       };
 
-      // Cache the result
+      // Cache in both persistent storage and memory
+      await storageService.saveToCache(cacheKey, locationInfo, 24, 'geocoding'); // 24 hours
       this.cache.set(cacheKey, {
         data: locationInfo,
         timestamp: Date.now()
@@ -201,10 +223,35 @@ export class GeocodingService {
   /**
    * Get cache statistics
    */
-  static getCacheStats(): { size: number; hitRate: number } {
+  static getCacheStats(): { memorySize: number; hitRate: number; circuitBreakerState: string } {
     return {
-      size: this.cache.size,
-      hitRate: 0 // Could implement hit rate tracking
+      memorySize: this.cache.size,
+      hitRate: 0, // Could implement hit rate tracking
+      circuitBreakerState: this.circuitBreaker.getState()
     };
+  }
+
+  /**
+   * Clear all caches (memory and persistent)
+   */
+  static async clearAllCaches(): Promise<void> {
+    this.cache.clear();
+    console.info('Geocoding memory cache cleared');
+  }
+
+  /**
+   * Preload common locations for better performance
+   */
+  static async preloadLocations(locations: { city: string; coords?: LatLng }[]): Promise<void> {
+    const promises = locations.map(async (location) => {
+      if (location.coords) {
+        // Preload reverse geocoding
+        await this.reverseGeocode(location.coords);
+      }
+      // Preload forward geocoding
+      await this.forwardGeocode(location.city);
+    });
+
+    await Promise.allSettled(promises);
   }
 }

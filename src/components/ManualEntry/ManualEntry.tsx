@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { format, parseISO, isValid } from 'date-fns';
 import type { ManualTrip } from '../../types/travel';
+import { GeocodingService, type LocationInfo } from '../../services/geocoding';
+import { CountriesService } from '../../services/countries';
 
 interface ManualEntryProps {
   onAddTrip: (trip: ManualTrip) => void;
@@ -23,6 +25,107 @@ export const ManualEntry: React.FC<ManualEntryProps> = ({
 
   const [errors, setErrors] = useState<Partial<ManualTrip>>({});
   const [showEndDate, setShowEndDate] = useState(false);
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [locationSuggestions, setLocationSuggestions] = useState<LocationInfo[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [geocodingError, setGeocodingError] = useState<string>('');
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Initialize countries service
+  useEffect(() => {
+    CountriesService.initialize().catch(err => {
+      console.warn('Failed to initialize countries service:', err);
+    });
+  }, []);
+
+  // Handle clicks outside of suggestions to close them
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Debounced geocoding for city input
+  const performGeocoding = useCallback(async (cityInput: string) => {
+    if (!cityInput.trim() || cityInput.length < 3) {
+      setLocationSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    setIsGeocoding(true);
+    setGeocodingError('');
+
+    try {
+      const result = await GeocodingService.forwardGeocode(cityInput);
+      
+      if (result.coords) {
+        // Also try to get country info if not already provided
+        let countryInfo = null;
+        if (result.countryCode) {
+          countryInfo = await CountriesService.getCountryInfo(result.countryCode);
+        }
+
+        const suggestion: LocationInfo = {
+          ...result,
+          country: countryInfo?.name || result.country,
+          countryCode: countryInfo?.code || result.countryCode
+        };
+
+        setLocationSuggestions([suggestion]);
+        setShowSuggestions(true);
+      } else {
+        setLocationSuggestions([]);
+        setShowSuggestions(false);
+        if (result.confidence < 0.3) {
+          setGeocodingError('Location not found. Please check the spelling.');
+        }
+      }
+    } catch (error) {
+      console.warn('Geocoding failed:', error);
+      setGeocodingError('Unable to find location. Please enter manually.');
+      setLocationSuggestions([]);
+      setShowSuggestions(false);
+    } finally {
+      setIsGeocoding(false);
+    }
+  }, []);
+
+  // Debounced search effect
+  useEffect(() => {
+    if (!formData.city) {
+      setLocationSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      performGeocoding(formData.city);
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [formData.city, performGeocoding]);
+
+  const handleLocationSelect = useCallback((suggestion: LocationInfo) => {
+    setFormData(prev => ({
+      ...prev,
+      city: suggestion.city || prev.city,
+      country: suggestion.country || prev.country,
+      coordinates: suggestion.coords ? {
+        latitude: suggestion.coords.latitude,
+        longitude: suggestion.coords.longitude
+      } : prev.coordinates
+    }));
+    setShowSuggestions(false);
+    setGeocodingError('');
+  }, []);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<ManualTrip> = {};
@@ -102,21 +205,71 @@ export const ManualEntry: React.FC<ManualEntryProps> = ({
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* City */}
-        <div>
+        <div className="relative">
           <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
             City *
           </label>
-          <input
-            id="city"
-            type="text"
-            value={formData.city}
-            onChange={(e) => handleInputChange('city', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              errors.city ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="e.g., Paris"
-            disabled={isLoading}
-          />
+          <div className="relative">
+            <input
+              id="city"
+              type="text"
+              value={formData.city}
+              onChange={(e) => handleInputChange('city', e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.city ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="e.g., Paris"
+              disabled={isLoading}
+              autoComplete="off"
+            />
+            {isGeocoding && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+              </div>
+            )}
+          </div>
+          
+          {/* Location Suggestions */}
+          {showSuggestions && locationSuggestions.length > 0 && (
+            <div 
+              ref={suggestionsRef}
+              className="absolute top-full left-0 right-0 z-10 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+            >
+              {locationSuggestions.map((suggestion, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => handleLocationSelect(suggestion)}
+                  className="w-full text-left px-3 py-2 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-b border-gray-100 last:border-b-0"
+                  disabled={isLoading}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium text-gray-900">
+                        {suggestion.city}
+                      </div>
+                      {suggestion.country && (
+                        <div className="text-sm text-gray-500">
+                          {suggestion.country}
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      {Math.round(suggestion.confidence * 100)}% match
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+          
+          {/* Geocoding Error */}
+          {geocodingError && (
+            <div className="mt-1 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
+              <p className="text-yellow-700 text-sm">{geocodingError}</p>
+            </div>
+          )}
+          
           {errors.city && (
             <p className="text-red-500 text-sm mt-1">{errors.city}</p>
           )}
