@@ -170,9 +170,26 @@ export class AppErrorHandler {
       [ErrorCode.NETWORK_ERROR]: [
         'Check your internet connection',
         'Try refreshing the page'
+      ],
+      [ErrorCode.GEOCODING_ERROR]: [
+        'Continue without enhanced location data',
+        'Try again later when the service is available'
+      ],
+      [ErrorCode.WEATHER_API_ERROR]: [
+        'Continue without weather information',
+        'Weather data will be skipped for this session'
+      ],
+      [ErrorCode.COUNTRIES_API_ERROR]: [
+        'Continue with basic country detection',
+        'Country flags may not be displayed correctly'
+      ],
+      [ErrorCode.API_RATE_LIMITED]: [
+        'Wait a few minutes and try again',
+        'Some features may be temporarily limited'
       ]
     };
 
     return recoveryActions[code] || ['Try refreshing the page and starting over'];
   }
 }
+
