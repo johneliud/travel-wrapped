@@ -172,6 +172,56 @@ export const WrappedFlow: React.FC<WrappedFlowProps> = ({
           </motion.div>
         )
       },
+      {
+        id: 'level',
+        title: 'Travel Level',
+        autoAdvanceDelay: 4000,
+        component: (
+          <motion.div className="text-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8 }}
+            >
+              <div className="text-5xl mb-6">🏆</div>
+              <motion.h2 
+                className="text-3xl font-bold text-purple-600 mb-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                You reached
+              </motion.h2>
+              <motion.div 
+                className="bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full w-32 h-32 flex items-center justify-center mx-auto mb-6"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.6, type: "spring", bounce: 0.5 }}
+              >
+                <span className="text-4xl font-bold text-white">{travelLevel.level}</span>
+              </motion.div>
+              <motion.h3 
+                className="text-2xl font-bold text-purple-700 mb-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.9 }}
+              >
+                {travelLevel.title}
+              </motion.h3>
+              {travelLevel.nextLevelKm > 0 && (
+                <motion.p 
+                  className="text-lg text-gray-500"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.2 }}
+                >
+                  {travelLevel.nextLevelKm.toLocaleString()} km to next level
+                </motion.p>
+              )}
+            </motion.div>
+          </motion.div>
+        )
+      },
       
 };
 
