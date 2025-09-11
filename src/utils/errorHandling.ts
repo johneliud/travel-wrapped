@@ -259,3 +259,46 @@ export class ApiCircuitBreaker {
   }
 }
 
+/**
+ * API fallback manager for graceful degradation
+ */
+export class ApiFallbackManager {
+  private static fallbacks = new Map<string, () => unknown>();
+
+  static registerFallback<T>(apiName: string, fallbackFunction: () => T): void {
+    this.fallbacks.set(apiName, fallbackFunction);
+  }
+
+  static async executeWithFallback<T>(
+    apiName: string,
+    primaryOperation: () => Promise<T>,
+    options?: {
+      useCircuitBreaker?: boolean;
+      customFallback?: () => T;
+    }
+  ): Promise<T> {
+    try {
+      return await primaryOperation();
+    } catch (error) {
+      console.warn(`${apiName} failed, attempting fallback:`, error);
+      
+      // Try custom fallback first
+      if (options?.customFallback) {
+        return options.customFallback();
+      }
+      
+      // Try registered fallback
+      const fallback = this.fallbacks.get(apiName);
+      if (fallback) {
+        return fallback() as T;
+      }
+      
+      // Re-throw error if no fallback available
+      throw error;
+    }
+  }
+
+  static clearFallbacks(): void {
+    this.fallbacks.clear();
+  }
+}
