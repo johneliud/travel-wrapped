@@ -1,5 +1,6 @@
 import { parseISO } from 'date-fns';
 import { TravelCalculations } from './calculations';
+import { calculateDistance } from '../utils/geometry';
 import type { 
   GoogleTimelineData, 
   SemanticSegment, 
@@ -20,19 +21,6 @@ export class TimelineParser {
     };
   }
 
-  private static calculateDistance(point1: LatLng, point2: LatLng): number {
-    // Haversine formula to calculate distance between two points
-    const R = 6371; // Earth's radius in kilometers
-    const dLat = (point2.latitude - point1.latitude) * Math.PI / 180;
-    const dLon = (point2.longitude - point1.longitude) * Math.PI / 180;
-    
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(point1.latitude * Math.PI / 180) * Math.cos(point2.latitude * Math.PI / 180) *
-              Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c * 1000; // Convert to meters
-  }
 
   private static processSegment(segment: SemanticSegment, index: number): ProcessedTrip | null {
     try {
@@ -71,7 +59,7 @@ export class TimelineParser {
         const endLocation = this.parseLatLngString(segment.activity.end.latLng);
         
         const distance = segment.activity.distanceMeters || 
-                        this.calculateDistance(startLocation, endLocation);
+                        (calculateDistance(startLocation, endLocation) * 1000); // Convert km to meters
 
         return {
           id: `activity-${index}`,
@@ -90,7 +78,7 @@ export class TimelineParser {
         const startPoint = this.parseLatLngString(segment.timelinePath[0].point);
         const endPoint = this.parseLatLngString(segment.timelinePath[segment.timelinePath.length - 1].point);
         
-        const distance = this.calculateDistance(startPoint, endPoint);
+        const distance = calculateDistance(startPoint, endPoint) * 1000; // Convert km to meters
 
         // Only include if there's meaningful movement (>100m)
         if (distance > 100) {
