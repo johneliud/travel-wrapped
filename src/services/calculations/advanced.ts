@@ -199,5 +199,63 @@ export class AdvancedAnalytics {
     };
   }
 
-  
+  /**
+   * Calculate transport mode breakdown
+   */
+  private static calculateTransportModeBreakdown(trips: EnhancedTrip[]): Array<{ mode: string; distanceKm: number; percentage: number; tripsCount: number; averageDistance: number }> {
+    const journeys = trips.filter(trip => trip.type === 'JOURNEY' && trip.distanceKm);
+    
+    if (journeys.length === 0) return [];
+
+    const modeStats = new Map<string, { distance: number; count: number }>();
+    let totalDistance = 0;
+
+    journeys.forEach(trip => {
+      const distance = trip.distanceKm || 0;
+      totalDistance += distance;
+
+      // Categorize transport mode based on distance and original activity types
+      let mode = 'Other';
+      
+      // Look at the segments to determine transport mode
+      const hasFlightActivity = trip.segments.some(segment => 
+        segment.activityType === 'IN_PLANE' || 
+        (segment.distanceMeters && segment.distanceMeters > 100000) // >100km likely flight
+      );
+      
+      const hasCarActivity = trip.segments.some(segment => 
+        segment.activityType === 'DRIVING' || segment.activityType === 'IN_BUS'
+      );
+      
+      const hasWalkActivity = trip.segments.some(segment => 
+        segment.activityType === 'WALKING'
+      );
+
+      if (hasFlightActivity || distance > 500) {
+        mode = 'Flying';
+      } else if (hasCarActivity || distance > 20) {
+        mode = 'Driving';
+      } else if (hasWalkActivity || distance <= 20) {
+        mode = 'Walking';
+      }
+
+      const existing = modeStats.get(mode);
+      if (existing) {
+        existing.distance += distance;
+        existing.count++;
+      } else {
+        modeStats.set(mode, { distance, count: 1 });
+      }
+    });
+
+    return Array.from(modeStats.entries())
+      .map(([mode, stats]) => ({
+        mode,
+        distanceKm: Math.round(stats.distance * 100) / 100,
+        percentage: Math.round((stats.distance / totalDistance) * 10000) / 100,
+        tripsCount: stats.count,
+        averageDistance: Math.round((stats.distance / stats.count) * 100) / 100
+      }))
+      .sort((a, b) => b.distanceKm - a.distanceKm);
+  }
 }
