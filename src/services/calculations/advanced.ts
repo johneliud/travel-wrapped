@@ -96,5 +96,73 @@ export class AdvancedAnalytics {
     };
   }
 
+  /**
+   * Calculate longest travel streak
+   */
+  private static calculateLongestTravelStreak(trips: EnhancedTrip[]): { startDate: string; endDate: string; daysCount: number; tripsCount: number; countriesVisited: number; totalDistance: number } | undefined {
+    if (trips.length === 0) return undefined;
+
+    const sortedTrips = trips.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+    const maxGapDays = 7; // Consider trips within 7 days as part of the same streak
+
+    let currentStreakStart = 0;
+    let currentStreakEnd = 0;
+    let longestStreakStart = 0;
+    let longestStreakEnd = 0;
+    let maxStreakLength = 1;
+
+    for (let i = 1; i < sortedTrips.length; i++) {
+      const prevTrip = sortedTrips[i - 1];
+      const currentTrip = sortedTrips[i];
+      
+      const daysBetween = differenceInDays(startOfDay(currentTrip.startTime), startOfDay(prevTrip.endTime));
+      
+      if (daysBetween <= maxGapDays) {
+        // Continue streak
+        currentStreakEnd = i;
+      } else {
+        // Check if current streak is longest
+        const currentStreakLength = currentStreakEnd - currentStreakStart + 1;
+        if (currentStreakLength > maxStreakLength) {
+          maxStreakLength = currentStreakLength;
+          longestStreakStart = currentStreakStart;
+          longestStreakEnd = currentStreakEnd;
+        }
+        
+        // Start new streak
+        currentStreakStart = i;
+        currentStreakEnd = i;
+      }
+    }
+
+    // Check final streak
+    const finalStreakLength = currentStreakEnd - currentStreakStart + 1;
+    if (finalStreakLength > maxStreakLength) {
+      longestStreakStart = currentStreakStart;
+      longestStreakEnd = currentStreakEnd;
+    }
+
+    const streakTrips = sortedTrips.slice(longestStreakStart, longestStreakEnd + 1);
+    const totalDays = differenceInDays(
+      streakTrips[streakTrips.length - 1].endTime,
+      streakTrips[0].startTime
+    ) + 1;
+
+    const countriesVisited = new Set(
+      streakTrips.map(trip => trip.country).filter(Boolean)
+    ).size;
+
+    const totalDistance = streakTrips.reduce((sum, trip) => sum + (trip.distanceKm || 0), 0);
+
+    return {
+      startDate: format(streakTrips[0].startTime, 'yyyy-MM-dd'),
+      endDate: format(streakTrips[streakTrips.length - 1].endTime, 'yyyy-MM-dd'),
+      daysCount: totalDays,
+      tripsCount: streakTrips.length,
+      countriesVisited,
+      totalDistance: Math.round(totalDistance * 100) / 100
+    };
+  }
+
   
 }
