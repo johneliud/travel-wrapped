@@ -133,5 +133,41 @@ export class TripEnhancement {
     };
   }
 
+  /**
+   * Enrich trip with API data (geocoding, weather, country info)
+   */
+  private static async enrichTripWithAPIs(trip: EnhancedTrip): Promise<EnhancedTrip> {
+    const enrichedTrip = { ...trip };
+
+    try {
+      // Geocoding for location details
+      const geocodingResult = await GeocodingService.reverseGeocode(trip.location);
+
+      if (geocodingResult) {
+        enrichedTrip.city = geocodingResult.city;
+        enrichedTrip.country = geocodingResult.country;
+        enrichedTrip.countryCode = geocodingResult.countryCode;
+      }
+
+      // Weather data for the trip date
+      const weatherData = await WeatherService.getWeatherForDate(
+        trip.location,
+        trip.startTime.toISOString().split('T')[0] // Convert to YYYY-MM-DD
+      );
+
+      if (weatherData) {
+        enrichedTrip.weather = {
+          temperature: weatherData.temperature,
+          description: weatherData.weatherDescription,
+          icon: WeatherService.getWeatherIcon(weatherData.weatherCode)
+        };
+      }
+    } catch (error) {
+      console.warn('Failed to enrich trip with API data:', error);
+    }
+
+    return enrichedTrip;
+  }
+
   
 }
