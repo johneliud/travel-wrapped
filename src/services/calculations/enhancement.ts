@@ -83,5 +83,30 @@ export class TripEnhancement {
     return groupedTrips;
   }
 
+  /**
+   * Create a stay trip from segments
+   */
+  private static createStayTrip(segments: ProcessedTrip[]): EnhancedTrip | null {
+    if (segments.length === 0) return null;
+
+    const firstSegment = segments[0];
+    const lastSegment = segments[segments.length - 1];
+    const totalDuration = differenceInMinutes(lastSegment.endTime, firstSegment.startTime);
+
+    // Only include meaningful stays
+    if (totalDuration < this.MIN_STAY_DURATION_MINUTES) return null;
+
+    return {
+      id: `stay-${firstSegment.id}`,
+      type: 'STAY',
+      startTime: firstSegment.startTime,
+      endTime: lastSegment.endTime,
+      location: firstSegment.startLocation || firstSegment.endLocation!,
+      durationMinutes: totalDuration,
+      confidence: segments.reduce((sum, s) => sum + s.confidence, 0) / segments.length,
+      segments
+    };
+  }
+
   
 }
