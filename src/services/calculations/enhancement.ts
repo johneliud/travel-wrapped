@@ -108,5 +108,30 @@ export class TripEnhancement {
     };
   }
 
+  /**
+   * Create a journey trip from segments
+   */
+  private static createJourneyTrip(segments: ProcessedTrip[]): EnhancedTrip | null {
+    if (segments.length === 0) return null;
+
+    const firstSegment = segments[0];
+    const lastSegment = segments[segments.length - 1];
+    const totalDistance = segments.reduce((sum, segment) => sum + (segment.distanceMeters || 0), 0);
+    const totalDuration = differenceInMinutes(lastSegment.endTime, firstSegment.startTime);
+
+    return {
+      id: `journey-${firstSegment.id}`,
+      type: 'JOURNEY',
+      startTime: firstSegment.startTime,
+      endTime: lastSegment.endTime,
+      location: firstSegment.startLocation || firstSegment.endLocation!,
+      endLocation: lastSegment.endLocation || lastSegment.startLocation,
+      distanceKm: totalDistance / 1000,
+      durationMinutes: totalDuration,
+      confidence: segments.reduce((sum, s) => sum + s.confidence, 0) / segments.length,
+      segments
+    };
+  }
+
   
 }
