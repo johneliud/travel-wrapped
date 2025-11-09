@@ -98,19 +98,6 @@ export const VisualizationView: React.FC<VisualizationViewProps> = ({
           );
         })()}
 
-        <div className="mt-8 bg-green-50 rounded-lg p-4">
-          <h4 className="text-lg font-semibold text-green-800 mb-2">Phase 1.5 Complete!</h4>
-          <p className="text-green-700 text-sm mb-3">
-            Basic visualization is now implemented with interactive maps, location pins, and route connections.
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-green-600">
-            <div>Interactive Maps</div>
-            <div>Trip Routes</div>
-            <div>Location Markers</div>
-            <div>Map Controls</div>
-          </div>
-        </div>
-
         <div className="flex flex-wrap gap-4 mt-6">
           <button
             onClick={onBackToResults}

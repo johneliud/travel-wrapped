@@ -109,23 +109,6 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
           </div>
         )}
 
-        <div className="mt-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
-          <h4 className="text-lg font-semibold text-green-800 mb-2 flex items-center">
-            <span className="text-xl mr-2">🎉</span>
-            Phase 1.6 Stats Display Complete!
-          </h4>
-          <p className="text-green-700 text-sm mb-3">
-            Gamified stats display with achievements, travel levels, personality insights, and fun facts from Numbers API.
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs text-green-600">
-            <div>Gamified Cards</div>
-            <div>Achievement System</div>
-            <div>Travel Levels</div>
-            <div>Personality Types</div>
-            <div>Numbers API Facts</div>
-          </div>
-        </div>
-
         <div className="flex flex-wrap gap-4 mt-6">
           <button
             onClick={onViewWrapped}

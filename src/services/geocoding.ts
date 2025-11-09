@@ -65,7 +65,7 @@ export class GeocodingService {
             lat: coords.latitude.toString(),
             lon: coords.longitude.toString(),
             addressdetails: '1',
-            zoom: '10'
+            zoom: '18' // Increased from 10 to 18 for more specific locations
           });
 
           const response = await fetch(url, {
@@ -184,22 +184,40 @@ export class GeocodingService {
       };
     }
 
-    // Extract city from various possible fields
-    const city = address.city || address.town || address.village;
+    // Extract more specific location details - prioritize smaller administrative units
+    const city = address.village || address.town || address.city || 
+                 address.suburb || address.neighbourhood || address.hamlet;
     const country = address.country;
     const countryCode = address.country_code;
+    
+    // If no specific city found, try to extract from display_name
+    let finalCity = city;
+    if (!finalCity) {
+      const displayParts = result.display_name.split(',');
+      finalCity = displayParts[0]?.trim();
+      
+      // If first part is just a number/address, try second part
+      if (finalCity && /^\d/.test(finalCity)) {
+        finalCity = displayParts[1]?.trim() || finalCity;
+      }
+    }
     
     // Confidence based on importance and address completeness
     let confidence = 0.5;
     if (result.importance && result.importance > 0.5) {
       confidence = 0.8;
     }
-    if (city && country) {
+    if (finalCity && country) {
       confidence = Math.max(confidence, 0.7);
+    }
+    
+    // Higher confidence for more specific locations (villages vs cities)
+    if (address.village || address.neighbourhood) {
+      confidence = Math.max(confidence, 0.8);
     }
 
     return {
-      city,
+      city: finalCity,
       country,
       countryCode: countryCode?.toUpperCase(),
       confidence
