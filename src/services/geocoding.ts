@@ -10,6 +10,9 @@ export interface GeocodingResult {
     city?: string;
     town?: string;
     village?: string;
+    suburb?: string;
+    neighbourhood?: string;
+    hamlet?: string;
     state?: string;
     country?: string;
     country_code?: string;
