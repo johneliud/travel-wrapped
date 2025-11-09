@@ -147,6 +147,16 @@ export class TripEnhancement {
         enrichedTrip.city = geocodingResult.city;
         enrichedTrip.country = geocodingResult.country;
         enrichedTrip.countryCode = geocodingResult.countryCode;
+        
+        // If geocoding returns generic city name, make it more specific with coordinates
+        if (geocodingResult.city && geocodingResult.confidence < 0.6) {
+          enrichedTrip.city = `${geocodingResult.city} (${trip.location.latitude.toFixed(3)}, ${trip.location.longitude.toFixed(3)})`;
+        }
+      }
+
+      // Fallback: if no city found, use coordinates as identifier
+      if (!enrichedTrip.city) {
+        enrichedTrip.city = `Location ${trip.location.latitude.toFixed(3)}, ${trip.location.longitude.toFixed(3)}`;
       }
 
       // Weather data for the trip date - get weather for both STAY and JOURNEY trips
@@ -192,6 +202,9 @@ export class TripEnhancement {
       }
     } catch (error) {
       console.warn('Failed to enrich trip with API data:', error);
+      
+      // Fallback: use coordinates as city name
+      enrichedTrip.city = `Location ${trip.location.latitude.toFixed(3)}, ${trip.location.longitude.toFixed(3)}`;
     }
 
     return enrichedTrip;
