@@ -19,7 +19,8 @@ function App() {
   const handleDataProcessed = useCallback(async (result: ProcessingResult | EnhancedProcessingResult, fileName?: string, fileSize?: number) => {
     try {
       await saveProcessingResult(result, fileName, fileSize)
-      setCurrentView('results')
+      // Automatically start wrapped story instead of going to results
+      setCurrentView('wrapped')
     } catch (err) {
       console.error('Failed to save processing result:', err)
       setCurrentView('input') // Stay on input view if save fails
