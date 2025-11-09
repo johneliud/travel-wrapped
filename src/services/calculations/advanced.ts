@@ -214,30 +214,8 @@ export class AdvancedAnalytics {
       const distance = trip.distanceKm || 0;
       totalDistance += distance;
 
-      // Categorize transport mode based on distance and original activity types
-      let mode = 'Other';
-      
-      // Look at the segments to determine transport mode
-      const hasFlightActivity = trip.segments.some(segment => 
-        segment.activityType === 'IN_PLANE' || 
-        (segment.distanceMeters && segment.distanceMeters > 100000) // >100km likely flight
-      );
-      
-      const hasCarActivity = trip.segments.some(segment => 
-        segment.activityType === 'DRIVING' || segment.activityType === 'IN_BUS'
-      );
-      
-      const hasWalkActivity = trip.segments.some(segment => 
-        segment.activityType === 'WALKING'
-      );
-
-      if (hasFlightActivity || distance > 500) {
-        mode = 'Flying';
-      } else if (hasCarActivity || distance > 20) {
-        mode = 'Driving';
-      } else if (hasWalkActivity || distance <= 20) {
-        mode = 'Walking';
-      }
+      // Determine transport mode based on timeline activity types from segments
+      const mode = this.determineTransportMode(trip);
 
       const existing = modeStats.get(mode);
       if (existing) {
@@ -257,5 +235,54 @@ export class AdvancedAnalytics {
         averageDistance: Math.round((stats.distance / stats.count) * 100) / 100
       }))
       .sort((a, b) => b.distanceKm - a.distanceKm);
+  }
+
+  /**
+   * Determine transport mode based on timeline activity types
+   */
+  private static determineTransportMode(trip: EnhancedTrip): string {
+    // Get activity types from the trip's segments
+    const activityTypes = trip.segments?.map(s => s.activityType).filter(Boolean) || [];
+    const primaryActivityType = activityTypes[0]; // Use first available activity type
+    
+    if (!primaryActivityType) return 'Unknown';
+
+    // Map timeline activity types to transport modes
+    switch (primaryActivityType) {
+      case 'FLYING':
+        return 'Flying';
+      
+      case 'IN_RAIL_VEHICLE':
+        return 'Train';
+      
+      case 'IN_BUS':
+        return 'Bus';
+      
+      case 'IN_ROAD_VEHICLE':
+      case 'IN_VEHICLE':
+      case 'IN_PASSENGER_VEHICLE':
+        return 'Car';
+      
+      case 'IN_TWO_WHEELER_VEHICLE':
+      case 'MOTORCYCLING':
+        return 'Motorcycle';
+      
+      case 'ON_BICYCLE':
+        return 'Bicycle';
+      
+      case 'WALKING':
+      case 'ON_FOOT':
+        return 'Walking';
+      
+      case 'RUNNING':
+        return 'Running';
+      
+      case 'EXITING_VEHICLE':
+      case 'STILL':
+      case 'TILTING':
+      case 'UNKNOWN':
+      default:
+        return 'Other';
+    }
   }
 }
