@@ -1,53 +1,69 @@
-import { useState, useCallback, useEffect } from 'react'
-import { DataInput } from './components/DataInput'
-import { WrappedFlow } from './components/WrappedFlow'
-import { ResultsView, VisualizationView } from './components/views'
-import { useTravelData, useProcessingResult } from './hooks/useTravelData'
-import { useStorageQuota } from './hooks/useStorageQuota'
-import type { ProcessingResult, EnhancedProcessingResult } from './types/travel'
+import { useState, useCallback, useEffect } from "react";
+import { DataInput } from "./components/DataInput";
+import { WrappedFlow } from "./components/WrappedFlow";
+import { ResultsView, VisualizationView } from "./components/views";
+import { useTravelData, useProcessingResult } from "./hooks/useTravelData";
+import { useStorageQuota } from "./hooks/useStorageQuota";
+import type {
+  ProcessingResult,
+  EnhancedProcessingResult,
+} from "./types/travel";
 
 function App() {
-  const [currentView, setCurrentView] = useState<'input' | 'results' | 'visualization' | 'wrapped'>('input')
-  const { travelData, isLoading, error, clearCurrentData } = useTravelData()
-  const { saveProcessingResult } = useProcessingResult()
-  const { quotaInfo, isLowStorage, isCriticalStorage } = useStorageQuota(60000) // Check every minute
+  const [currentView, setCurrentView] = useState<
+    "input" | "results" | "visualization" | "wrapped"
+  >("input");
+  const { travelData, isLoading, error, clearCurrentData } = useTravelData();
+  const { saveProcessingResult } = useProcessingResult();
+  const { quotaInfo, isLowStorage, isCriticalStorage } = useStorageQuota(60000); // Check every minute
 
-  const handleDataProcessed = useCallback(async (result: ProcessingResult | EnhancedProcessingResult, fileName?: string, fileSize?: number) => {
-    try {
-      await saveProcessingResult(result, fileName, fileSize)
-      setCurrentView('results')
-    } catch (err) {
-      console.error('Failed to save processing result:', err)
-    }
-  }, [saveProcessingResult])
+  const handleDataProcessed = useCallback(
+    async (
+      result: ProcessingResult | EnhancedProcessingResult,
+      fileName?: string,
+      fileSize?: number,
+    ) => {
+      try {
+        await saveProcessingResult(result, fileName, fileSize);
+
+        setCurrentView("results");
+      } catch (err) {
+        console.error("Failed to save processing result:", err);
+        setCurrentView("input"); // Stay on input view if save fails
+      }
+    },
+    [saveProcessingResult],
+  );
 
   const handleContinueToVisualization = useCallback(() => {
-    setCurrentView('visualization')
-  }, [])
+    setCurrentView("visualization");
+  }, []);
 
   const handleViewWrapped = useCallback(() => {
-    setCurrentView('wrapped')
-  }, [])
+    setCurrentView("wrapped");
+  }, []);
 
   const handleCompleteWrapped = useCallback(() => {
-    setCurrentView('results')
-  }, [])
+    setCurrentView("results");
+  }, []);
 
   const handleBackToInput = useCallback(() => {
-    clearCurrentData()
-    setCurrentView('input')
-  }, [clearCurrentData])
+    clearCurrentData();
+    setCurrentView("input");
+  }, [clearCurrentData]);
 
   const handleBackToResults = useCallback(() => {
-    setCurrentView('results')
-  }, [])
+    setCurrentView("results");
+  }, []);
 
   // Show storage warnings
   useEffect(() => {
     if (isCriticalStorage && quotaInfo) {
-      console.warn(`Storage critical: ${quotaInfo.percentage.toFixed(1)}% used`)
+      console.warn(
+        `Storage critical: ${quotaInfo.percentage.toFixed(1)}% used`,
+      );
     }
-  }, [isCriticalStorage, quotaInfo])
+  }, [isCriticalStorage, quotaInfo]);
 
   // Convert stored travel data to the format expected by components
   const getDisplayData = useCallback(() => {
@@ -55,6 +71,7 @@ function App() {
 
     if (travelData.enhancedTrips && travelData.enhancedStats) {
       // Enhanced result format
+
       return {
         enhancedTrips: travelData.enhancedTrips,
         enhancedStats: travelData.enhancedStats,
@@ -63,27 +80,34 @@ function App() {
         totalSegments: travelData.totalSegments,
         processedSegments: travelData.processedSegments,
         apiEnrichmentProgress: travelData.apiEnrichmentProgress,
-        errors: travelData.errors
+        errors: travelData.errors,
       } as EnhancedProcessingResult;
     } else {
       // Basic result format
+
       return {
         trips: travelData.basicTrips,
         stats: travelData.basicStats,
         totalSegments: travelData.totalSegments,
         processedSegments: travelData.processedSegments,
-        errors: travelData.errors
+        errors: travelData.errors,
       } as ProcessingResult;
     }
   }, [travelData]);
 
-  const isEnhancedResult = (data: ProcessingResult | EnhancedProcessingResult): data is EnhancedProcessingResult => {
-    return 'enhancedTrips' in data && 'enhancedStats' in data
-  }
+  const isEnhancedResult = (
+    data: ProcessingResult | EnhancedProcessingResult,
+  ): data is EnhancedProcessingResult => {
+    return "enhancedTrips" in data && "enhancedStats" in data;
+  };
 
   const renderResults = () => {
     const displayData = getDisplayData();
-    if (!displayData) return null;
+
+    if (!displayData) {
+      console.error("No display data available");
+      return <div className="p-8 text-center">No data available</div>;
+    }
 
     const enhanced = isEnhancedResult(displayData);
     const stats = enhanced ? displayData.enhancedStats : displayData.stats;
@@ -147,7 +171,8 @@ function App() {
                 Storage Low: {quotaInfo.percentage.toFixed(1)}% used
               </p>
               <p className="text-sm">
-                Your local storage is getting full. Consider exporting your data.
+                Your local storage is getting full. Consider exporting your
+                data.
               </p>
             </div>
           </div>
@@ -155,31 +180,36 @@ function App() {
       )}
 
       {/* Main Content */}
-      {currentView === 'input' && (
+      {currentView === "input" && (
         <DataInput onDataProcessed={handleDataProcessed} />
       )}
-      
-      {currentView === 'results' && renderResults()}
-      
-      {currentView === 'visualization' && renderVisualization()}
-      
-      {currentView === 'wrapped' && (() => {
-        const displayData = getDisplayData();
-        if (!displayData) return null;
-        
-        const enhanced = isEnhancedResult(displayData);
-        const stats = enhanced ? displayData.enhancedStats : displayData.stats;
-        const trips = enhanced ? displayData.enhancedTrips : displayData.trips;
-        
-        return (
-          <WrappedFlow 
-            trips={trips}
-            stats={stats}
-            isEnhanced={enhanced}
-            onComplete={handleCompleteWrapped}
-          />
-        );
-      })()}
+
+      {currentView === "results" && renderResults()}
+
+      {currentView === "visualization" && renderVisualization()}
+
+      {currentView === "wrapped" &&
+        (() => {
+          const displayData = getDisplayData();
+          if (!displayData) return null;
+
+          const enhanced = isEnhancedResult(displayData);
+          const stats = enhanced
+            ? displayData.enhancedStats
+            : displayData.stats;
+          const trips = enhanced
+            ? displayData.enhancedTrips
+            : displayData.trips;
+
+          return (
+            <WrappedFlow
+              trips={trips}
+              stats={stats}
+              isEnhanced={enhanced}
+              onComplete={handleCompleteWrapped}
+            />
+          );
+        })()}
 
       {/* Error Display */}
       {error && (
@@ -188,7 +218,7 @@ function App() {
           <span className="block sm:inline ml-2">{error}</span>
         </div>
       )}
-      
+
       {/* Loading State */}
       {isLoading && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -199,7 +229,7 @@ function App() {
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
