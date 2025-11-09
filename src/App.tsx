@@ -14,6 +14,7 @@ function App() {
   const { travelData, isLoading, error, clearCurrentData } = useTravelData()
   const { saveProcessingResult } = useProcessingResult()
   const { quotaInfo, isLowStorage, isCriticalStorage } = useStorageQuota(60000) // Check every minute
+  const [showError, setShowError] = useState(false)
 
   const handleDataProcessed = useCallback(async (result: ProcessingResult | EnhancedProcessingResult, fileName?: string, fileSize?: number) => {
     try {
@@ -64,6 +65,19 @@ function App() {
       console.warn(`Storage critical: ${quotaInfo.percentage.toFixed(1)}% used`)
     }
   }, [isCriticalStorage, quotaInfo])
+
+  // Auto-dismiss error after 3 seconds
+  useEffect(() => {
+    if (error) {
+      setShowError(true)
+      const timer = setTimeout(() => {
+        setShowError(false)
+      }, 3000)
+      return () => clearTimeout(timer)
+    } else {
+      setShowError(false)
+    }
+  }, [error])
 
   // Convert stored travel data to the format expected by components
   const getDisplayData = useCallback(() => {
@@ -212,7 +226,9 @@ function App() {
 
       {/* Error Display */}
       {error && (
-        <div className="fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50">
+        <div className={`fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50 transition-all duration-300 ${
+          showError ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
+        }`}>
           <strong className="font-bold">Error:</strong>
           <span className="block sm:inline ml-2">{error}</span>
         </div>
