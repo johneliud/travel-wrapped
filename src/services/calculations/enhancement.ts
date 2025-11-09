@@ -6,8 +6,8 @@ import { arePointsNearby } from '../../utils/geometry';
 import type { ProcessedTrip, EnhancedTrip } from '../../types/travel';
 
 export class TripEnhancement {
-  private static readonly MIN_STAY_DURATION_MINUTES = 30;
-  private static readonly PROXIMITY_THRESHOLD_KM = 0.5;
+  private static readonly MIN_STAY_DURATION_MINUTES = 10; // Reduced from 30 to capture shorter stops
+  private static readonly PROXIMITY_THRESHOLD_KM = 0.1; // Reduced from 0.5 to avoid merging distinct locations
   private static readonly MAX_CONCURRENT_API_CALLS = 5;
 
   static async enhanceTripsWithAPIs(
@@ -149,7 +149,7 @@ export class TripEnhancement {
         enrichedTrip.countryCode = geocodingResult.countryCode;
       }
 
-      // Weather data for the trip date
+      // Weather data for the trip date - get weather for both STAY and JOURNEY trips
       const weatherData = await WeatherService.getWeatherForDate(
         trip.location,
         trip.startTime.toISOString().split('T')[0] // Convert to YYYY-MM-DD
@@ -161,6 +161,34 @@ export class TripEnhancement {
           description: weatherData.weatherDescription,
           icon: WeatherService.getWeatherIcon(weatherData.weatherCode)
         };
+      }
+
+      // For journey trips, also try to get weather for the end location if different
+      if (trip.type === 'JOURNEY' && trip.endLocation && 
+          (Math.abs(trip.location.latitude - trip.endLocation.latitude) > 0.1 || 
+           Math.abs(trip.location.longitude - trip.endLocation.longitude) > 0.1)) {
+        
+        const endWeatherData = await WeatherService.getWeatherForDate(
+          trip.endLocation,
+          trip.startTime.toISOString().split('T')[0]
+        );
+
+        // Use the more extreme temperature (hotter or colder)
+        if (endWeatherData && weatherData) {
+          if (Math.abs(endWeatherData.temperature) > Math.abs(weatherData.temperature)) {
+            enrichedTrip.weather = {
+              temperature: endWeatherData.temperature,
+              description: endWeatherData.weatherDescription,
+              icon: WeatherService.getWeatherIcon(endWeatherData.weatherCode)
+            };
+          }
+        } else if (endWeatherData && !weatherData) {
+          enrichedTrip.weather = {
+            temperature: endWeatherData.temperature,
+            description: endWeatherData.weatherDescription,
+            icon: WeatherService.getWeatherIcon(endWeatherData.weatherCode)
+          };
+        }
       }
     } catch (error) {
       console.warn('Failed to enrich trip with API data:', error);
@@ -208,6 +236,17 @@ export class TripEnhancement {
 
     existingTrip.durationMinutes = differenceInMinutes(existingTrip.endTime, existingTrip.startTime);
 
+    // Preserve the most extreme weather data (hottest or coldest)
+    if (newTrip.weather && existingTrip.weather) {
+      // Keep the more extreme temperature
+      if (Math.abs(newTrip.weather.temperature) > Math.abs(existingTrip.weather.temperature)) {
+        existingTrip.weather = newTrip.weather;
+      }
+    } else if (newTrip.weather && !existingTrip.weather) {
+      existingTrip.weather = newTrip.weather;
+    }
+
+    // Update other details based on higher confidence
     if (newTrip.confidence > existingTrip.confidence) {
       existingTrip.placeName = newTrip.placeName || existingTrip.placeName;
       existingTrip.address = newTrip.address || existingTrip.address;
@@ -215,7 +254,6 @@ export class TripEnhancement {
       existingTrip.country = newTrip.country || existingTrip.country;
       existingTrip.countryCode = newTrip.countryCode || existingTrip.countryCode;
       existingTrip.confidence = newTrip.confidence;
-      existingTrip.weather = newTrip.weather || existingTrip.weather;
     }
 
     existingTrip.segments.push(...newTrip.segments);
