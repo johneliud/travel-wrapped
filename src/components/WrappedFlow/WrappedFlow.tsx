@@ -560,84 +560,163 @@ export const WrappedFlow: React.FC<WrappedFlowProps> = ({
         </div>
       </div>
 
-      {/* Enhanced Controls */}
+      {/* Enhanced Controls - Mobile Responsive */}
       <motion.div 
-        className="absolute bottom-8 left-0 right-0 flex justify-center items-center gap-6 z-20"
+        className="absolute bottom-4 left-4 right-4 z-20"
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: showControls ? 1 : 0.4, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <motion.button
-          onClick={prevSlide}
-          disabled={currentSlideIndex === 0}
-          className="p-3 rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-white/20"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </motion.button>
-
-        <div className="flex gap-3">
-          {slides.map((_, index) => (
+        {/* Mobile Layout */}
+        <div className="flex flex-col gap-4 sm:hidden">
+          {/* Top Row: Navigation */}
+          <div className="flex justify-center items-center gap-4">
             <motion.button
-              key={index}
-              onClick={() => goToSlide(index)}
-              className={`w-4 h-4 rounded-full transition-all border-2 ${
-                index === currentSlideIndex 
-                  ? 'bg-white border-white scale-125' 
-                  : 'bg-white/30 border-white/50 hover:bg-white/50'
-              }`}
-              whileHover={{ scale: index === currentSlideIndex ? 1.25 : 1.1 }}
+              onClick={prevSlide}
+              disabled={currentSlideIndex === 0}
+              className="p-2 rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-white/20"
+              whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-            />
-          ))}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </motion.button>
+
+            <div className="flex gap-2">
+              {slides.map((_, index) => (
+                <motion.button
+                  key={index}
+                  onClick={() => goToSlide(index)}
+                  className={`w-3 h-3 rounded-full transition-all border ${
+                    index === currentSlideIndex 
+                      ? 'bg-white border-white scale-125' 
+                      : 'bg-white/30 border-white/50 hover:bg-white/50'
+                  }`}
+                  whileHover={{ scale: index === currentSlideIndex ? 1.25 : 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                />
+              ))}
+            </div>
+
+            <motion.button
+              onClick={nextSlide}
+              disabled={currentSlideIndex === slides.length - 1}
+              className="p-2 rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-white/20"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </motion.button>
+          </div>
+
+          {/* Bottom Row: Play/Pause */}
+          <div className="flex justify-center">
+            <motion.button
+              onClick={toggleAutoAdvance}
+              className={`px-6 py-2 rounded-full text-sm font-semibold transition-all border border-white/20 ${
+                isAutoAdvancing 
+                  ? 'bg-white text-gray-800' 
+                  : 'bg-white/20 backdrop-blur-md text-white hover:bg-white/30'
+              }`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {isAutoAdvancing ? (
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                  </svg>
+                  Pause
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                  Play
+                </div>
+              )}
+            </motion.button>
+          </div>
         </div>
 
-        <motion.button
-          onClick={nextSlide}
-          disabled={currentSlideIndex === slides.length - 1}
-          className="p-3 rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-white/20"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </motion.button>
+        {/* Desktop Layout */}
+        <div className="hidden sm:flex justify-center items-center gap-6">
+          <motion.button
+            onClick={prevSlide}
+            disabled={currentSlideIndex === 0}
+            className="p-3 rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-white/20"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </motion.button>
 
-        <motion.button
-          onClick={toggleAutoAdvance}
-          className={`ml-4 px-4 py-2 rounded-full text-sm font-semibold transition-all border border-white/20 ${
-            isAutoAdvancing 
-              ? 'bg-white text-gray-800' 
-              : 'bg-white/20 backdrop-blur-md text-white hover:bg-white/30'
-          }`}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          {isAutoAdvancing ? (
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-              </svg>
-              Pause
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z"/>
-              </svg>
-              Play
-            </div>
-          )}
-        </motion.button>
+          <div className="flex gap-3">
+            {slides.map((_, index) => (
+              <motion.button
+                key={index}
+                onClick={() => goToSlide(index)}
+                className={`w-4 h-4 rounded-full transition-all border-2 ${
+                  index === currentSlideIndex 
+                    ? 'bg-white border-white scale-125' 
+                    : 'bg-white/30 border-white/50 hover:bg-white/50'
+                }`}
+                whileHover={{ scale: index === currentSlideIndex ? 1.25 : 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              />
+            ))}
+          </div>
+
+          <motion.button
+            onClick={nextSlide}
+            disabled={currentSlideIndex === slides.length - 1}
+            className="p-3 rounded-full bg-white/20 backdrop-blur-md text-white hover:bg-white/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-white/20"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </motion.button>
+
+          <motion.button
+            onClick={toggleAutoAdvance}
+            className={`ml-4 px-4 py-2 rounded-full text-sm font-semibold transition-all border border-white/20 ${
+              isAutoAdvancing 
+                ? 'bg-white text-gray-800' 
+                : 'bg-white/20 backdrop-blur-md text-white hover:bg-white/30'
+            }`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            {isAutoAdvancing ? (
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                </svg>
+                Pause
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+                Play
+              </div>
+            )}
+          </motion.button>
+        </div>
       </motion.div>
 
-      {/* Skip Button */}
+      {/* Skip Button - Mobile Responsive */}
       <motion.button
-        className="absolute top-8 right-8 px-6 py-3 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/30 transition-all font-semibold border border-white/20 z-20"
+        className="absolute top-4 right-4 px-4 py-2 sm:px-6 sm:py-3 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/30 transition-all font-semibold border border-white/20 z-20 text-sm sm:text-base"
         onClick={onComplete}
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: showControls ? 1 : 0.4, x: 0 }}
@@ -645,7 +724,8 @@ export const WrappedFlow: React.FC<WrappedFlowProps> = ({
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
-        Skip Story →
+        <span className="hidden sm:inline">Skip Story →</span>
+        <span className="sm:hidden">Skip →</span>
       </motion.button>
     </div>
   );
