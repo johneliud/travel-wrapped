@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO, isValid } from 'date-fns';
 import type { ManualTrip } from '../../types/travel';
 import { GeocodingService, type LocationInfo } from '../../services/geocoding';
@@ -189,24 +190,44 @@ export const ManualEntry: React.FC<ManualEntryProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md mx-auto">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="bg-white rounded-xl shadow-lg p-6 w-full border border-gray-100"
+    >
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-gray-800">Add Manual Trip</h2>
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900">Add Manual Trip</h2>
+        </div>
         {onClose && (
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-xl"
+            className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
             disabled={isLoading}
           >
-            ×
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
           </button>
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* City */}
-        <div className="relative">
-          <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1 }}
+          className="relative"
+        >
+          <label htmlFor="city" className="block text-sm font-semibold text-gray-700 mb-2">
             City *
           </label>
           <div className="relative">
@@ -215,69 +236,106 @@ export const ManualEntry: React.FC<ManualEntryProps> = ({
               type="text"
               value={formData.city}
               onChange={(e) => handleInputChange('city', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.city ? 'border-red-500' : 'border-gray-300'
+              className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+                errors.city ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-gray-400 focus:border-blue-500'
               }`}
-              placeholder="e.g., Paris"
+              placeholder="e.g., Paris, Tokyo, New York"
               disabled={isLoading}
               autoComplete="off"
             />
             {isGeocoding && (
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+                <motion.div 
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full"
+                />
               </div>
             )}
           </div>
           
           {/* Location Suggestions */}
-          {showSuggestions && locationSuggestions.length > 0 && (
-            <div 
-              ref={suggestionsRef}
-              className="absolute top-full left-0 right-0 z-10 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-            >
-              {locationSuggestions.map((suggestion, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => handleLocationSelect(suggestion)}
-                  className="w-full text-left px-3 py-2 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-b border-gray-100 last:border-b-0"
-                  disabled={isLoading}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium text-gray-900">
-                        {suggestion.city}
-                      </div>
-                      {suggestion.country && (
-                        <div className="text-sm text-gray-500">
-                          {suggestion.country}
+          <AnimatePresence>
+            {showSuggestions && locationSuggestions.length > 0 && (
+              <motion.div 
+                ref={suggestionsRef}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute top-full left-0 right-0 z-10 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto"
+              >
+                {locationSuggestions.map((suggestion, index) => (
+                  <motion.button
+                    key={index}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    type="button"
+                    onClick={() => handleLocationSelect(suggestion)}
+                    className="w-full text-left px-4 py-3 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none border-b border-gray-100 last:border-b-0 transition-colors"
+                    disabled={isLoading}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium text-gray-900 flex items-center">
+                          <span className="mr-2">📍</span>
+                          {suggestion.city}
                         </div>
-                      )}
+                        {suggestion.country && (
+                          <div className="text-sm text-gray-500 ml-6">
+                            {suggestion.country}
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-xs text-blue-500 bg-blue-100 px-2 py-1 rounded-full">
+                        {Math.round(suggestion.confidence * 100)}% match
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-400">
-                      {Math.round(suggestion.confidence * 100)}% match
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
+                  </motion.button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
           
           {/* Geocoding Error */}
-          {geocodingError && (
-            <div className="mt-1 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
-              <p className="text-yellow-700 text-sm">{geocodingError}</p>
-            </div>
-          )}
+          <AnimatePresence>
+            {geocodingError && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg"
+              >
+                <p className="text-yellow-700 text-sm flex items-center">
+                  <span className="mr-2">⚠️</span>
+                  {geocodingError}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
           
-          {errors.city && (
-            <p className="text-red-500 text-sm mt-1">{errors.city}</p>
-          )}
-        </div>
+          <AnimatePresence>
+            {errors.city && (
+              <motion.p 
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                className="text-red-500 text-sm mt-2 flex items-center"
+              >
+                <span className="mr-1">❌</span>
+                {errors.city}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
         {/* Country */}
-        <div>
-          <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <label htmlFor="country" className="block text-sm font-semibold text-gray-700 mb-2">
             Country
           </label>
           <input
@@ -285,20 +343,34 @@ export const ManualEntry: React.FC<ManualEntryProps> = ({
             type="text"
             value={formData.country}
             onChange={(e) => handleInputChange('country', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              errors.country ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+              errors.country ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-gray-400 focus:border-blue-500'
             }`}
-            placeholder="e.g., France"
+            placeholder="e.g., France, Japan, United States"
             disabled={isLoading}
           />
-          {errors.country && (
-            <p className="text-red-500 text-sm mt-1">{errors.country}</p>
-          )}
-        </div>
+          <AnimatePresence>
+            {errors.country && (
+              <motion.p 
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                className="text-red-500 text-sm mt-2 flex items-center"
+              >
+                <span className="mr-1">❌</span>
+                {errors.country}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
         {/* Start Date */}
-        <div>
-          <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <label htmlFor="startDate" className="block text-sm font-semibold text-gray-700 mb-2">
             Date Visited *
           </label>
           <input
@@ -307,57 +379,95 @@ export const ManualEntry: React.FC<ManualEntryProps> = ({
             value={formData.startDate}
             onChange={(e) => handleInputChange('startDate', e.target.value)}
             max={getTodayDate()}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              errors.startDate ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+              errors.startDate ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-gray-400 focus:border-blue-500'
             }`}
             disabled={isLoading}
           />
-          {errors.startDate && (
-            <p className="text-red-500 text-sm mt-1">{errors.startDate}</p>
-          )}
-        </div>
+          <AnimatePresence>
+            {errors.startDate && (
+              <motion.p 
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                className="text-red-500 text-sm mt-2 flex items-center"
+              >
+                <span className="mr-1">❌</span>
+                {errors.startDate}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
         {/* End Date Toggle */}
-        <div>
-          <label className="flex items-center space-x-2 text-sm text-gray-700">
-            <input
-              type="checkbox"
-              checked={showEndDate}
-              onChange={(e) => setShowEndDate(e.target.checked)}
-              className="rounded"
-              disabled={isLoading}
-            />
-            <span>Multi-day trip</span>
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4 }}
+          className="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl"
+        >
+          <input
+            type="checkbox"
+            id="multi-day"
+            checked={showEndDate}
+            onChange={(e) => setShowEndDate(e.target.checked)}
+            className="w-5 h-5 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500"
+            disabled={isLoading}
+          />
+          <label htmlFor="multi-day" className="flex items-center text-sm font-medium text-gray-700 cursor-pointer">
+            <span className="mr-2">🗓️</span>
+            Multi-day trip
           </label>
-        </div>
+        </motion.div>
 
         {/* End Date */}
-        {showEndDate && (
-          <div>
-            <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1">
-              End Date
-            </label>
-            <input
-              id="endDate"
-              type="date"
-              value={formData.endDate}
-              onChange={(e) => handleInputChange('endDate', e.target.value)}
-              min={formData.startDate}
-              max={getTodayDate()}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.endDate ? 'border-red-500' : 'border-gray-300'
-              }`}
-              disabled={isLoading}
-            />
-            {errors.endDate && (
-              <p className="text-red-500 text-sm mt-1">{errors.endDate}</p>
-            )}
-          </div>
-        )}
+        <AnimatePresence>
+          {showEndDate && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <label htmlFor="endDate" className="block text-sm font-semibold text-gray-700 mb-2">
+                End Date
+              </label>
+              <input
+                id="endDate"
+                type="date"
+                value={formData.endDate}
+                onChange={(e) => handleInputChange('endDate', e.target.value)}
+                min={formData.startDate}
+                max={getTodayDate()}
+                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+                  errors.endDate ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-gray-400 focus:border-blue-500'
+                }`}
+                disabled={isLoading}
+              />
+              <AnimatePresence>
+                {errors.endDate && (
+                  <motion.p 
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    className="text-red-500 text-sm mt-2 flex items-center"
+                  >
+                    <span className="mr-1">❌</span>
+                    {errors.endDate}
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Notes */}
-        <div>
-          <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <label htmlFor="notes" className="block text-sm font-semibold text-gray-700 mb-2">
             Notes
           </label>
           <textarea
@@ -365,37 +475,57 @@ export const ManualEntry: React.FC<ManualEntryProps> = ({
             value={formData.notes}
             onChange={(e) => handleInputChange('notes', e.target.value)}
             rows={3}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              errors.notes ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none transition-all ${
+              errors.notes ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-gray-400 focus:border-blue-500'
             }`}
             placeholder="Optional notes about this trip..."
             disabled={isLoading}
           />
-        </div>
+        </motion.div>
 
         {/* Submit Button */}
-        <button
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          whileHover={!isLoading ? { scale: 1.02 } : {}}
+          whileTap={!isLoading ? { scale: 0.98 } : {}}
           type="submit"
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           disabled={isLoading}
         >
           {isLoading ? (
             <div className="flex items-center justify-center space-x-2">
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <motion.div 
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+              />
               <span>Adding Trip...</span>
             </div>
           ) : (
-            'Add Trip'
+            <div className="flex items-center justify-center space-x-2">
+              <span>✈️</span>
+              <span>Add Trip</span>
+            </div>
           )}
-        </button>
+        </motion.button>
       </form>
 
-      <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-        <p className="text-sm text-blue-700">
-          <strong>💡 Tip:</strong> Manual trips will be combined with your Timeline data 
-          to create a complete travel story.
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.7 }}
+        className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200"
+      >
+        <p className="text-sm text-blue-700 flex items-start">
+          <span className="mr-2 text-lg">💡</span>
+          <span>
+            <strong>Tip:</strong> Manual trips will be combined with your Timeline data 
+            to create a complete travel story with enhanced insights.
+          </span>
         </p>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
