@@ -60,44 +60,57 @@ export const ACHIEVEMENT_DEFINITIONS: Omit<Achievement, 'unlocked'>[] = [
   { id: 'weather_warrior', title: 'Weather Warrior', description: 'Experienced both extreme hot and cold', icon: '🌡️', category: 'special' },
 ];
 
-// Numbers API service
+// Numbers API service with fallback
 export const numbersApiService = {
-  async getFact(number: number, type: 'math' | 'trivia' | 'date' | 'year' = 'trivia'): Promise<NumbersFact | null> {
-    try {
-      const cacheKey = `numbers_${type}_${number}`;
-      
-      // Check cache first (using existing storage service pattern)
-      if (typeof window !== 'undefined' && 'storage' in navigator) {
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) {
-          const { data, expiry } = JSON.parse(cached);
-          if (Date.now() < expiry) {
-            return data;
-          }
-        }
-      }
+  // Fallback facts for when API is unavailable
+  fallbackFacts: {
+    distance: [
+      "The average person walks about 7,500 steps per day",
+      "Light travels this distance in a fraction of a second",
+      "This distance could circle a small city",
+      "You could walk this distance in a few hours",
+      "This is roughly the distance of a marathon",
+      "Commercial airplanes cruise at about 35,000 feet altitude"
+    ],
+    countries: [
+      "There are 195 countries in the world",
+      "The United Nations has 193 member states",
+      "Some countries are smaller than major cities",
+      "The average person visits 12 countries in their lifetime",
+      "There are more countries than you might think!",
+      "Each country has its own unique culture and traditions"
+    ],
+    cities: [
+      "There are over 10,000 cities worldwide",
+      "Some cities have more people than entire countries",
+      "Cities are centers of culture and innovation",
+      "The world's oldest cities are thousands of years old",
+      "Modern cities are marvels of human engineering",
+      "Cities contain half of the world's population"
+    ],
+    trips: [
+      "The average person takes 4-5 trips per year",
+      "Travel broadens the mind and creates memories",
+      "Each trip is a new adventure waiting to happen",
+      "Frequent travelers report higher life satisfaction",
+      "Travel helps us understand different cultures",
+      "Every journey starts with a single step"
+    ]
+  },
 
-      const response = await fetch(`http://numbersapi.com/${number}/${type}?json`);
-      if (!response.ok) {
-        throw new Error('Numbers API request failed');
-      }
-      
-      const fact = await response.json() as NumbersFact;
-      
-      // Cache for 24 hours
-      if (typeof window !== 'undefined') {
-        const cacheData = {
-          data: fact,
-          expiry: Date.now() + 24 * 60 * 60 * 1000
-        };
-        localStorage.setItem(cacheKey, JSON.stringify(cacheData));
-      }
-      
-      return fact;
-    } catch (error) {
-      console.warn('Failed to fetch from Numbers API:', error);
-      return null;
-    }
+  async getFact(_number: number, _type: 'math' | 'trivia' | 'date' | 'year' = 'trivia'): Promise<NumbersFact | null> {
+    // Skip API calls due to CORS issues, use fallback directly
+    return null;
+  },
+
+  getFallbackFact(number: number, category: 'distance' | 'countries' | 'cities' | 'trips'): NumbersFact {
+    const facts = this.fallbackFacts[category];
+    const randomFact = facts[Math.floor(Math.random() * facts.length)];
+    return {
+      text: `${number} - ${randomFact}`,
+      found: true,
+      type: 'trivia'
+    };
   },
 
   async getMultipleFacts(numbers: Array<{ value: number; type: 'math' | 'trivia' | 'date' | 'year' }>): Promise<DynamicFact[]> {
@@ -108,7 +121,7 @@ export const numbersApiService = {
           number: value,
           fact: fact.text,
           type,
-          category: 'distance' as const // Default, will be overridden
+          category: 'distance' as const
         } : null;
       })
     );
@@ -127,7 +140,6 @@ export const numbersApiService = {
 export async function getTravelFacts(stats: TravelStats | EnhancedTravelStats): Promise<DynamicFact[]> {
   const factsToFetch: Array<{ 
     value: number; 
-    type: 'math' | 'trivia' | 'date' | 'year';
     category: 'distance' | 'countries' | 'cities' | 'trips';
   }> = [];
   
@@ -135,7 +147,6 @@ export async function getTravelFacts(stats: TravelStats | EnhancedTravelStats): 
   if (stats.totalDistanceKm > 0) {
     factsToFetch.push({ 
       value: Math.round(stats.totalDistanceKm), 
-      type: 'trivia' as const,
       category: 'distance' as const
     });
   }
@@ -143,7 +154,6 @@ export async function getTravelFacts(stats: TravelStats | EnhancedTravelStats): 
   if (stats.uniqueCountries > 0) {
     factsToFetch.push({ 
       value: stats.uniqueCountries, 
-      type: 'trivia' as const,
       category: 'countries' as const  
     });
   }
@@ -151,7 +161,6 @@ export async function getTravelFacts(stats: TravelStats | EnhancedTravelStats): 
   if (stats.uniqueCities > 0) {
     factsToFetch.push({ 
       value: stats.uniqueCities, 
-      type: 'math' as const,
       category: 'cities' as const
     });
   }
@@ -159,20 +168,20 @@ export async function getTravelFacts(stats: TravelStats | EnhancedTravelStats): 
   if (stats.totalTrips > 0) {
     factsToFetch.push({ 
       value: stats.totalTrips, 
-      type: 'trivia' as const,
       category: 'trips' as const
     });
   }
 
-  const facts = await numbersApiService.getMultipleFacts(
-    factsToFetch.map(({ value, type }) => ({ value, type }))
-  );
-  
-  // Add category information
-  return facts.map((fact, index) => ({
-    ...fact,
-    category: factsToFetch[index]?.category || ('distance' as const)
-  }));
+  // Use only fallback facts to avoid CORS issues
+  return factsToFetch.map(({ value, category }) => {
+    const fallbackFact = numbersApiService.getFallbackFact(value, category);
+    return {
+      number: value,
+      fact: fallbackFact.text,
+      type: 'trivia' as const,
+      category
+    };
+  });
 }
 
 // Function to check which achievements are unlocked
